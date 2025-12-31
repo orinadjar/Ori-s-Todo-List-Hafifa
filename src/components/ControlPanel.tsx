@@ -1,0 +1,48 @@
+import { Box, TextField, Button, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+
+import { useTodoContext } from '../context/todoContext';
+
+const ControlPanel = () => {
+  const { searchQuery, setSearchQuery, handleOpenDialog } = useTodoContext();
+
+  return (
+    <Box sx={{ mb: 4, mt: 5, alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+      <Stack direction="row" spacing={2}>
+
+          <TextField
+            variant="outlined"
+            placeholder="Search missions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 3, 
+                width: '300px',
+              }
+            }}
+          />
+
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleOpenDialog}
+          sx={{
+            borderRadius: 3,
+            px: 3, 
+            whiteSpace: 'nowrap', 
+            fontWeight: 'bold',
+            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+            width: '150px',
+          }}
+        >
+          add Task
+        </Button>
+
+      </Stack>
+    </Box>
+  )
+}
+
+export default ControlPanel

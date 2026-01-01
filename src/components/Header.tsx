@@ -1,6 +1,7 @@
-import { AppBar, Toolbar, Typography, Box, Chip } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, Chip, Tab, Tabs } from '@mui/material';
 
 import { useTodoContext } from '../context/todoContext';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
 
@@ -15,6 +16,13 @@ const Header = () => {
         <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
           Ori's Todo
         </Typography>
+
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Tabs value={0} textColor='primary' indicatorColor='primary'>
+            <Tab label="Todos" value='/' component={Link} to='/' sx={{ fontWeight: 'bold', textTransform: 'none' }}/>
+            <Tab label="Admin" value='/admintab' component={Link} to='/admintab' sx={{ fontWeight: 'bold', textTransform: 'none' }}/>
+          </Tabs>
+        </Box>
         
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <Chip 

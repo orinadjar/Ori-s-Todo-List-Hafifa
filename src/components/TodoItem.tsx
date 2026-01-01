@@ -31,6 +31,7 @@ const TodoItem = ({ todo }: Props) => {
                 height: '100%',
                 borderRadius: 2, 
                 borderTop: `6px solid ${todo.isCompleted ? '#4caf50' : getPriorityColor(todo.priority)}`,
+                borderBottom: `6px solid ${todo.isCompleted ? '#4caf50' : getPriorityColor(todo.priority)}`,
                 transition: 'transform 0.2s',
                 '&:hover': { transform: 'scale(1.01)' } 
             }}>
@@ -59,7 +60,7 @@ const TodoItem = ({ todo }: Props) => {
                             <Chip style={{ backgroundColor: getPriorityColor(todo.priority) }} label={todo.subject} />
                             
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 800, fontSize: 15 }}>
-                                Priority: {todo.priority} <br /> Due: {todo.date.toDateString()}
+                                Priority: {todo.priority} <br /> Due: {todo.date.toString().slice(0, 10)}
                             </Typography>
                         </Typography>
                     </Box>

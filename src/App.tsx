@@ -2,10 +2,9 @@ import './App.css'
 
 import CssBaseline from '@mui/material/CssBaseline';
 
+import { Outlet } from 'react-router-dom';
+
 import Header from './components/Header';
-import ControlPanel from './components/ControlPanel';
-import TodoList from './components/TodoList';
-import TodoDialog from './components/TodoDialog';
 
 function App() {
   return (
@@ -13,12 +12,7 @@ function App() {
       <CssBaseline />
 
       <Header />
-
-      <ControlPanel  />
-
-      <TodoList />
-
-      <TodoDialog />
+      <Outlet />
     </>
   )
 }

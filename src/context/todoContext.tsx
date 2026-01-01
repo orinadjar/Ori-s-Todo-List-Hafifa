@@ -2,21 +2,20 @@ import { createContext, useContext } from 'react';
 
 import type { Todo, TodoSubject } from '../types/types';
 
-// all the functions and states that will be provided by the context
 export interface TodoContextType {
     filteredTodos: Todo[];
     isDialogOpen: boolean;
     searchQuery: string;
     setSearchQuery: (query: string) => void;
     editingTodoId: string | null;
+    setEditingTodoId: (id: string | null) => void;
     addTodo: (name: string, subject: TodoSubject, priority: number, date: Date) => void;
     deleteTodo: (id: string) => void;
     toggleTodo: (id: string) => void;
-    updateTodo: (id: string, updatedFields: Partial<Omit<Todo, 'id'>>) => void;
+    updateTodo: (id: string, updatedFields: Partial<Omit<Todo, 'id'>>) => void; // Partial with Omit makes all fields optional except 'id'
     openEditDialog: (id: string) => void;
     handleOpenDialog: () => void;
     handleCloseDialog: () => void;
-    // Partial with Omit makes all fields optional except 'id'
 }
 
 export const TodoContext = createContext<TodoContextType | undefined>(undefined);

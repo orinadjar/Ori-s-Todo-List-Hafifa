@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { TodoContext } from "./todoContext";
 import type { Todo, TodoSubject } from "../types/types";
 import { useDebounce } from "../hooks/useDebounce";
+import type { Dayjs } from "dayjs";
 
 interface Props {
     children: React.ReactNode;
@@ -14,10 +15,7 @@ export function TodoProvider({ children }: Props){
         const savedData = localStorage.getItem('todos');
 
         if(savedData){
-            return JSON.parse(savedData).map((t: Todo) => ({
-                ...t,
-                date: new Date(t.date)
-            }));
+            return JSON.parse(savedData);
         }
 
         return [];
@@ -43,7 +41,7 @@ export function TodoProvider({ children }: Props){
             name,
             subject,
             priority,
-            date: new Date(date),
+            date,
             isCompleted: false,
         };
         setTodos((prev) => [...prev, newTodo]);
@@ -84,6 +82,7 @@ export function TodoProvider({ children }: Props){
             searchQuery,
             setSearchQuery,
             editingTodoId,
+            setEditingTodoId,
             addTodo,
             deleteTodo,
             toggleTodo,

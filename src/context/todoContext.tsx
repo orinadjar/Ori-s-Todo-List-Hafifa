@@ -2,7 +2,6 @@ import { createContext, useContext } from 'react';
 
 import type { Todo, TodoSubject } from '../types/types';
 
-// all the functions and states that will be provided by the context
 export interface TodoContextType {
     filteredTodos: Todo[];
     isDialogOpen: boolean;

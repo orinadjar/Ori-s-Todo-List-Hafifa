@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 
 import { Dialog, DialogTitle,DialogContent, TextField, 
          Button, Stack, MenuItem } from "@mui/material";
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
 
 import { useTodoContext } from '../context/todoContext';
 import type { TodoSubject } from "../types/types";
@@ -14,19 +19,20 @@ const TodoDialog = () => {
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');
   const [priority, setPriority] = useState(2);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<Dayjs | null>(dayjs('2026-01-01'));
 
   const handleCancel = () => {
     setName('');
     setSubject('General');
     setPriority(1);
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(dayjs('2026-01-01'));
     handleCloseDialog();
   }
 
   const handleSubmit = () => {
-    if(name.trim()){
-      const finalDate = date ? new Date(date) : new Date();
+    if(name.trim() && date){
+      const dateString = date.format('YYYY-MM-DD');
+      const finalDate = new Date(dateString);
 
       if (editingTodoId) {
         updateTodo(editingTodoId, { name, subject: subject as TodoSubject, priority, date: finalDate });
@@ -46,7 +52,7 @@ const TodoDialog = () => {
         setName(todoToEdit.name);
         setSubject(todoToEdit.subject);
         setPriority(todoToEdit.priority);
-        setDate(todoToEdit.date.toISOString().split('T')[0]);
+        setDate(dayjs(todoToEdit.date));
       }
     }
   }, [editingTodoId])
@@ -54,7 +60,7 @@ const TodoDialog = () => {
   return (
     <Dialog open={isDialogOpen} onClose={handleCancel} fullWidth maxWidth='xs' PaperProps={{style: { borderRadius: 12 }}}>
       <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', bgcolor: '#f8f9fa' }}>
-        Add new Mission
+        {isDialogOpen && editingTodoId ? 'Edit Mission' : 'Add New Mission'}
       </DialogTitle>
 
       <DialogContent>
@@ -72,15 +78,22 @@ const TodoDialog = () => {
 
           <TextField select label="Priority" value={priority} onChange={(e) => setPriority(Number(e.target.value))}
                      fullWidth>
-               {[...Array(10)].map((_, i) => ( // empty array with 10 slots, i indicates index
+               {[...Array(10)].map((_, i) => ( 
                 <MenuItem key={i + 1} value={i + 1}>
                   {i + 1}
                 </MenuItem>
               ))}
           </TextField>
 
-          <TextField label="Target Date" type="date" fullWidth value={date} onChange={(e) => setDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}></TextField>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DemoContainer components={['DatePicker']}>
+              <DatePicker
+                label="Pick your target date"
+                value={date}
+                onChange={(newValue) => setDate(newValue)}
+              />
+            </DemoContainer>
+          </LocalizationProvider>
           
         </Stack>
       </DialogContent>

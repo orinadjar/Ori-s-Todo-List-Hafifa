@@ -55,7 +55,8 @@ const TodoItem = ({ todo }: Props) => {
                             {todo.name}
                         </Typography>
 
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 'bold' }}>
+                        {/* component="div" because of this annoying problem in console */}
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 'bold' }} component="div"> 
                             <Chip style={{ backgroundColor: getPriorityColor(todo.priority) }} label={todo.subject} />
                             
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 800, fontSize: 15 }}>

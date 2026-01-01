@@ -10,18 +10,18 @@ const ControlPanel = () => {
     <Box sx={{ mb: 4, mt: 5, alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
       <Stack direction="row" spacing={2}>
 
-          <TextField
-            variant="outlined"
-            placeholder="Search missions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 3, 
-                width: '300px',
-              }
-            }}
-          />
+        <TextField
+          variant="outlined"
+          placeholder="Search missions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 3, 
+              width: '300px',
+            }
+          }}
+        />
 
         <Button
           variant="contained"

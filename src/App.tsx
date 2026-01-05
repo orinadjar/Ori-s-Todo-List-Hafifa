@@ -13,18 +13,18 @@ function App() {
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
 
   const openEditDialog = (id: string) => {
-          setEditingTodoId(id);
-          setIsDialogOpen(true);
+    setEditingTodoId(id);
+    setIsDialogOpen(true);
   }
 
   const handleOpenDialog = () => {
-      setEditingTodoId(null);
-      setIsDialogOpen(true);
+    setEditingTodoId(null);
+    setIsDialogOpen(true);
   }
 
   const handleCloseDialog = () => {
-      setIsDialogOpen(false);
-      setEditingTodoId(null);
+    setIsDialogOpen(false);
+    setEditingTodoId(null);
   }
 
   return (
@@ -33,7 +33,7 @@ function App() {
 
       <Header />
       
-      <Outlet />
+      <Outlet context={{ openEditDialog,  handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog}}/>
     </>
   )
 }

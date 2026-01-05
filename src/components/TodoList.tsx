@@ -1,10 +1,13 @@
 import { Grid, Typography } from "@mui/material"
 
-import { useTodoContext } from "../context/todoContext"
+import { useTodos } from "../context/todoContext"
 import TodoItem from "./TodoItem"
 
-const TodoList = () => {
-  const { filteredTodos } = useTodoContext();
+interface Props {
+  openEditDialog: (id:string) => void;
+}
+const TodoList = ({ openEditDialog }: Props) => {
+  const { filteredTodos } = useTodos();
 
   return (
     <>
@@ -18,7 +21,7 @@ const TodoList = () => {
         ) : (
           filteredTodos.map((todo) => (
             <Grid size={{ xs: 2, sm: 3, md: 3, lg: 3 }} key={todo.id}>
-              <TodoItem todo={todo} />
+              <TodoItem todo={todo} openEditDialog={openEditDialog}/>
             </Grid>
           ))
         )}

@@ -1,8 +1,8 @@
 import { TextField } from "@mui/material"
-import { useTodoContext } from "../context/todoContext"
+import { useTodos } from "../context/todoContext"
 
 const SearcField = () => {
-    const { searchQuery, setSearchQuery } = useTodoContext();
+    const { searchQuery, setSearchQuery } = useTodos();
     
     return (
         <TextField

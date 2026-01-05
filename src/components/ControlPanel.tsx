@@ -1,11 +1,13 @@
 import { Box, Button, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
-import { useTodoContext } from '../context/todoContext';
 import SearcField from './SearcField';
 
-const ControlPanel = () => {
-  const { handleOpenDialog } = useTodoContext();
+interface Props {
+  handleOpenDialog: () => void;
+}
+
+const ControlPanel = ({ handleOpenDialog }: Props ) => {
 
   return (
     <Box sx={{ mb: 4, mt: 5, alignItems: 'center', display: 'flex', justifyContent: 'center' }}>

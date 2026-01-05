@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
 import { TodoContext } from "./todoContext";
 import type { Todo, TodoSubject } from "../types/types";
 import { useDebounce } from "../hooks/useDebounce";
+import useThrottling from "../hooks/useThrottling";
 
 interface Props {
     children: React.ReactNode;
@@ -20,12 +21,9 @@ export function TodoProvider({ children }: Props){
         return [];
     });
     const [searchQuery, setSearchQuery] = useState('');
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
-
-    useEffect(() => {
-        localStorage.setItem('todos', JSON.stringify(todos));
-    }, [todos])
+    
+    // throttling
+    useThrottling(todos);
 
     const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -59,36 +57,15 @@ export function TodoProvider({ children }: Props){
         setTodos((prev) => prev.map((todo) => todo.id === id ? {...todo, ...fields} : todo))
     }
 
-    const openEditDialog = (id: string) => {
-        setEditingTodoId(id);
-        setIsDialogOpen(true);
-    }
-
-    const handleOpenDialog = () => {
-        setEditingTodoId(null);
-        setIsDialogOpen(true);
-    }
-
-    const handleCloseDialog = () => {
-        setIsDialogOpen(false);
-        setEditingTodoId(null);
-    }
-
     return (
         <TodoContext.Provider value={{
             filteredTodos,
-            isDialogOpen,
             searchQuery,
             setSearchQuery,
-            editingTodoId,
-            setEditingTodoId,
             addTodo,
             deleteTodo,
             toggleTodo,
             updateTodo,
-            openEditDialog,
-            handleOpenDialog,
-            handleCloseDialog,
         }}>
             {children}
         </TodoContext.Provider>

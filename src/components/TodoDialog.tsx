@@ -9,13 +9,19 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import { useTodoContext } from '../context/todoContext';
+import { useTodos } from '../context/todoContext';
 import type { TodoSubject } from "../types/types";
 
 const SUBJECTS: TodoSubject[] = ['Work' , 'Personal' , 'Military' , 'Urgent' , 'General']
 
-const TodoDialog = () => {
-  const { addTodo, handleCloseDialog, isDialogOpen, editingTodoId, filteredTodos, updateTodo } = useTodoContext();
+interface Props {
+  isDialogOpen: boolean;
+  editingTodoId: string | null;
+  handleCloseDialog: () => void;
+}
+
+const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
+  const { addTodo, filteredTodos, updateTodo } = useTodos();
 
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');

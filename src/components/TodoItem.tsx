@@ -5,14 +5,15 @@ import EditIcon from '@mui/icons-material/Edit';
 import DoneIcon from '@mui/icons-material/Done';
 
 import type { Todo } from '../types/types';
-import { useTodoContext } from '../context/todoContext';
+import { useTodos } from '../context/todoContext';
 
 interface Props {
     todo: Todo;
+    openEditDialog: (id:string) => void;
 }
 
-const TodoItem = ({ todo }: Props) => {
-    const { deleteTodo, toggleTodo, openEditDialog } = useTodoContext();
+const TodoItem = ({ todo, openEditDialog }: Props) => {
+    const { deleteTodo, toggleTodo } = useTodos();
 
     const getPriorityColor = (priority: number): string | undefined => {
         if (priority > 0 && priority <= 2) return '#a6a6a6ff'; 

@@ -1,18 +1,19 @@
-import { useLocation } from 'react-router-dom';
 
 import { AppBar, Toolbar, Typography, Box, Chip, Tab, Tabs } from '@mui/material';
 
-import { useTodoContext } from '../context/todoContext';
+import { useTodos } from '../context/todoContext';
 import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 
 const Header = () => {
 
-  const { filteredTodos } = useTodoContext();
+  const { filteredTodos } = useTodos();
   
-  const total = filteredTodos.length;
-  const completed = filteredTodos.filter(t => t.isCompleted).length; 
+  const completed = useMemo(() => {
+    return filteredTodos.filter(todo => todo.isCompleted).length;
+  }, [filteredTodos]);
 
-  const location = useLocation();
+  const total = filteredTodos.length;
 
   return (
     <AppBar position="static" sx={{ bgcolor: 'white', color: 'black', boxShadow: 3, mb: 4 }}>

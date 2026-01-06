@@ -64,6 +64,19 @@ const AdminScreen = () => {
       header: 'Completed',
       cell: info => info.getValue() ? 'Yes' : 'No',
     }),
+    columnHelper.accessor('location', {
+      header: 'Location',
+      cell: info => {
+        const coords = info.getValue();
+        if(!coords) return '-';
+
+        return (
+          <Typography>
+            {`${coords[0].toFixed(2)}, ${coords[1].toFixed(2)}`}
+          </Typography>
+        )
+      },
+    }),
     columnHelper.display({
       id: 'actions',
       header: 'Actions',
@@ -143,13 +156,15 @@ const AdminScreen = () => {
               {headersGroup.headers.map(header => (
                 <TableCell key={header.id}
                   onClick={header.column.getToggleSortingHandler()}
-                  sx={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none' }}>
+                  sx={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none',
+                        '&:hover': header.column.getCanSort() ? { backgroundColor: 'rgba(213, 231, 233, 0.4)' } : undefined }}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
                   )}
+                  
                 </TableCell>
-              ))}
+              ))} 
 
             </TableRow>
           ))}
@@ -161,7 +176,7 @@ const AdminScreen = () => {
           {table.getRowModel().rows.map(row => (
 
             <TableRow key={row.id}
-            sx={{ backgroundColor: row.original.isCompleted ? '#e8f5e9' : '#f8ddddff' }}>
+              sx={{ backgroundColor: row.original.isCompleted ? '#e8f5e9ff' : '#f8ddddff' }}>
               
               {row.getVisibleCells().map(cell => (
                 <TableCell key={cell.id}>

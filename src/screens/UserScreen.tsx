@@ -7,6 +7,9 @@ import { Box } from '@mui/material';
 import MapComponent from '../components/MapComponent';
 
 import { useTodos } from '../context/todoContext';
+import MapContainer from '../components/Map/MapContainer';
+import BaseLayer from '../components/Map/Layers/BaseLayer.jsx';
+import TodosLayer from '../components/Map/Layers/TodosLayer.js';
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
@@ -33,7 +36,10 @@ const UserScreen = () => {
           </Box>
 
           <Box sx={{ flex: 1, border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', height: '100%', position: 'relative' }}>
-            <MapComponent todos={filteredTodos}/>
+            <MapContainer>
+              <BaseLayer />
+              <TodosLayer />
+            </MapContainer>
           </Box>
 
         </Box>

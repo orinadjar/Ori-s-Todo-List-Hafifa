@@ -20,7 +20,7 @@ const TodoList = ({ openEditDialog }: Props) => {
           </Grid>
         ) : (
           filteredTodos.map((todo) => (
-            <Grid size={{ xs: 2, sm: 3, md: 3, lg: 3 }} key={todo.id}>
+            <Grid size={{ xs: 4, sm: 4, md: 4, lg: 4 }} key={todo.id}>
               <TodoItem todo={todo} openEditDialog={openEditDialog}/>
             </Grid>
           ))

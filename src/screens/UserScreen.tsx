@@ -4,9 +4,7 @@ import ControlPanel from '../components/ControlPanel';
 import TodoList from '../components/TodoList';
 import TodoDialog from '../components/TodoDialog';
 import { Box } from '@mui/material';
-import MapComponent from '../components/MapComponent';
 
-import { useTodos } from '../context/todoContext';
 import MapContainer from '../components/Map/MapContainer';
 import BaseLayer from '../components/Map/Layers/BaseLayer.jsx';
 import TodosLayer from '../components/Map/Layers/TodosLayer.js';
@@ -21,7 +19,6 @@ interface AdminOutletContext {
 
 const UserScreen = () => {
     const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
-    const { filteredTodos } = useTodos();
 
     return (
       <>

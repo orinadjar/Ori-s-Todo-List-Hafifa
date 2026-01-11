@@ -17,17 +17,25 @@ const TodosLayer = () => {
                 coordinates: todo.location
             },
             properties: {
-                name: todo.name,
                 id: todo.id,
+                name: todo.name,
                 icon: todo.isCompleted ? completedIcon : unCompletedIcon,
-            }
+                tooltipContent: {
+                    name: todo.name,
+                    priority: todo.priority,
+                    date: todo.date.toString().slice(0, 10),
+                    subject: todo.subject,
+                }
+            },
         }))
     };
 
     return (
         <GeoJsonLayer
             name="todos"
-            data={todosGeoJson} />
+            data={todosGeoJson}
+            zIndex={1}
+            tooltipField="tooltipContent" />
     )
 }
 

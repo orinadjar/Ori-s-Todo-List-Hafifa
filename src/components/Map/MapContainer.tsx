@@ -7,6 +7,7 @@ import Overlay from 'ol/Overlay';
 import { Box, Typography } from '@mui/material';
 
 import { MapContext } from './MapContext';
+import MapHud from './Layers/MapHud';
 
 interface Props {
     children: React.ReactNode;
@@ -16,6 +17,7 @@ const MapContainer = ({ children }: Props) => {
 
     const mapElement = useRef<HTMLDivElement>(null);
     const popupElement = useRef<HTMLDivElement>(null);
+
     const [mapInstance, setMapInstance] = useState<Map | null>(null);
 
     const [currentTooltip, setCurrentTooltip] = useState<any>(null);
@@ -68,6 +70,8 @@ const MapContainer = ({ children }: Props) => {
         <MapContext.Provider value={{ map: mapInstance }}>
             <Box ref={mapElement} sx={{ width: '100%', height: '100%', position: 'relative' }}>
                 { mapInstance && children }
+
+                <MapHud />
                 
                 <Box ref={popupElement} sx={{
                     background: 'white',
@@ -88,6 +92,8 @@ const MapContainer = ({ children }: Props) => {
                             <Typography variant="caption" display="block">Subject: {currentTooltip.subject}</Typography>
                         </Box>
                     )}
+
+                    
 
                 </Box>
             </Box>

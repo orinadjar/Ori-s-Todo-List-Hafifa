@@ -32,7 +32,7 @@ const TodosLayer = () => {
 
     return (
         <GeoJsonLayer
-            name="todos"
+            name="Todos Layer"
             data={todosGeoJson}
             zIndex={1}
             tooltipField="tooltipContent" />

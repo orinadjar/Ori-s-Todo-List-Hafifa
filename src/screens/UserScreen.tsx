@@ -8,6 +8,7 @@ import { Box } from '@mui/material';
 import MapContainer from '../components/Map/MapContainer';
 import BaseLayer from '../components/Map/Layers/BaseLayer.jsx';
 import TodosLayer from '../components/Map/Layers/TodosLayer.js';
+import MapHud from '../components/Map/Layers/MapHud.js';
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;

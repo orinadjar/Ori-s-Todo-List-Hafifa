@@ -14,6 +14,9 @@ const BaseLayer = () => {
 
         const tileLayer = new TileLayer({
             source: new OSM(),
+            properties: { 
+                name: "Base Map"
+            },
         });
 
         map.addLayer(tileLayer);

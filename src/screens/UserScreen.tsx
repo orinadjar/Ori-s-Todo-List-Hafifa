@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 import MapContainer from '../components/Map/MapContainer';
 import BaseLayer from '../components/Map/Layers/BaseLayer.jsx';
 import TodosLayer from '../components/Map/Layers/TodosLayer.js';
-import MapHud from '../components/Map/Layers/MapHud.js';
+import StatesLayer from '../components/Map/Layers/StatesLayer.js';
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
@@ -36,6 +36,7 @@ const UserScreen = () => {
           <Box sx={{ flex: 1, border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', height: '100%', position: 'relative' }}>
             <MapContainer>
               <BaseLayer />
+              <StatesLayer />
               <TodosLayer />
             </MapContainer>
           </Box>

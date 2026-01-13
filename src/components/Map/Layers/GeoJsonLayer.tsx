@@ -30,7 +30,7 @@ const GeoJsonLayer = ({ name, data, zIndex, tooltipField }: GeoJsonLayerProps) =
     sourceRef.current.clear();
 
     const features = new GeoJSON().readFeatures(data);
-
+    
     features.forEach((feature) => {
       if(tooltipField) {
         const content = feature.get(tooltipField);

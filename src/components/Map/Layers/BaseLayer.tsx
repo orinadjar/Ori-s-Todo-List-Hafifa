@@ -14,6 +14,7 @@ const BaseLayer = () => {
 
         const tileLayer = new TileLayer({
             source: new OSM(),
+            zIndex: 0,
             properties: { 
                 name: "Base Map"
             },

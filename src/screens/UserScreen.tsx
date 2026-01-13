@@ -6,9 +6,9 @@ import TodoDialog from '../components/TodoDialog';
 import { Box } from '@mui/material';
 
 import MapContainer from '../components/Map/MapContainer';
-import BaseLayer from '../components/Map/Layers/BaseLayer.jsx';
-import TodosLayer from '../components/Map/Layers/TodosLayer.js';
-import StatesLayer from '../components/Map/Layers/StatesLayer.js';
+import BaseLayer from '../components/Map/Layers/BaseLayer.tsx';
+import TodosLayer from '../components/Map/Layers/TodosLayer.tsx';
+import StatesLayer from '../components/Map/Layers/StatesLayer.tsx';
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;

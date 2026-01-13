@@ -93,8 +93,6 @@ const MapContainer = ({ children }: Props) => {
                         </Box>
                     )}
 
-                    
-
                 </Box>
             </Box>
         </MapContext.Provider>

@@ -9,11 +9,13 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import { useTodos } from '../context/todoContext';
 import type { TodoSubject } from "../types/types";
 import MapComponent from "./MapComponent";
 
 import type { Todo } from "../types/types";
+
+import { useAtom, useSetAtom } from "jotai";
+import { filteredTodosAtom, addTodoAtom, updateTodoAtom } from "../atoms/todoAtoms";
 
 const SUBJECTS: TodoSubject[] = ['Work' , 'Personal' , 'Military' , 'Urgent' , 'General']
 
@@ -24,7 +26,9 @@ interface Props {
 }
 
 const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
-  const { addTodo, filteredTodos, updateTodo } = useTodos();
+  const addTodo = useSetAtom( addTodoAtom );
+  const updateTodo = useSetAtom( updateTodoAtom );
+  const [ filteredTodos ] = useAtom(filteredTodosAtom)
 
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');

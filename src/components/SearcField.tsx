@@ -1,8 +1,23 @@
 import { TextField } from "@mui/material"
-import { useTodos } from "../context/todoContext"
+
+import { useAtom, useSetAtom } from "jotai";
+
+import { useDebounce } from "../hooks/useDebounce";
+
+import { searchQueryAtom ,debouncedSearchAtom } from "../atoms/todoAtoms";
+import { useEffect } from "react";
+
 
 const SearcField = () => {
-    const { searchQuery, setSearchQuery } = useTodos();
+    const [ searchQuery, setSearchQuery ] = useAtom(searchQueryAtom);
+
+    const setDebuncedSearchAtom = useSetAtom(debouncedSearchAtom);
+
+    const debuncedValue = useDebounce(searchQuery, 300);
+
+    useEffect(() => {
+        setDebuncedSearchAtom(debuncedValue);
+    }, [debuncedValue])
     
     return (
         <TextField

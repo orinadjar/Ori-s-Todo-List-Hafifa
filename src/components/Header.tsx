@@ -2,13 +2,14 @@ import { useLocation } from 'react-router-dom';
 
 import { AppBar, Toolbar, Typography, Box, Chip, Tab, Tabs } from '@mui/material';
 
-import { useTodos } from '../context/todoContext';
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 
-const Header = () => {
+import { useAtom } from 'jotai';
+import { filteredTodosAtom } from '../atoms/todoAtoms';
 
-  const { filteredTodos } = useTodos();
+const Header = () => {
+  const [ filteredTodos ] = useAtom(filteredTodosAtom)
   
   const completed = useMemo(() => {
     return filteredTodos.filter(todo => todo.isCompleted).length;

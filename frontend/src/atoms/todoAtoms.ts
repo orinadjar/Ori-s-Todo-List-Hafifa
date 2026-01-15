@@ -10,6 +10,7 @@ export const searchQueryAtom = atom('');
 export const debouncedSearchAtom = atom('');
 
 export const filteredTodosAtom = atom((get) => {
+
     const todos = get(todosAtom);
     const debouncedSearch = get(debouncedSearchAtom);
 
@@ -30,6 +31,7 @@ export const addTodoAtom = atom(
         };
 
         const prevTodos = get(todosAtom);
+
         set(todosAtom , [...prevTodos, newTodo]);
     }
 );
@@ -37,7 +39,9 @@ export const addTodoAtom = atom(
 export const deleteTodoAtom = atom(
     null,
     (get, set, id: string) => {
+
         const prevTodos = get(todosAtom);
+
         set(todosAtom, prevTodos.filter((todo) => todo.id !== id));
     }
 );
@@ -45,7 +49,9 @@ export const deleteTodoAtom = atom(
 export const toggleTodoAtom = atom(
     null,
     (get, set, id: string) => {
+
         const prevTodos = get(todosAtom);
+
         set(todosAtom, prevTodos.map((todo) => todo.id === id 
             ? 
             {...todo, isCompleted: !todo.isCompleted} 
@@ -57,7 +63,9 @@ export const toggleTodoAtom = atom(
 export const updateTodoAtom = atom(
     null,
     (get, set, id: string, fields: Partial<Todo>) => {
+        
         const prevTodos = get(todosAtom);
+
         set(todosAtom, prevTodos.map((todo) => todo.id === id
         ? 
         {...todo, ...fields} 

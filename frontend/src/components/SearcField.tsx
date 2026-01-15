@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { TextField } from "@mui/material"
 
 import { useAtom, useSetAtom } from "jotai";
@@ -5,7 +7,6 @@ import { useAtom, useSetAtom } from "jotai";
 import { useDebounce } from "../hooks/useDebounce";
 
 import { searchQueryAtom ,debouncedSearchAtom } from "../atoms/todoAtoms";
-import { useEffect } from "react";
 
 
 const SearcField = () => {

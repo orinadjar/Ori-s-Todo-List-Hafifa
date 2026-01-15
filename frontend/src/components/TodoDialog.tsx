@@ -28,7 +28,7 @@ interface Props {
 const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
   const addTodo = useSetAtom( addTodoAtom );
   const updateTodo = useSetAtom( updateTodoAtom );
-  const [ filteredTodos ] = useAtom(filteredTodosAtom)
+  const [ filteredTodos ] = useAtom(filteredTodosAtom);
 
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');
@@ -69,9 +69,9 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
         setSubject(todoToEdit.subject);
         setPriority(todoToEdit.priority);
         setDate(dayjs(todoToEdit.date));
-        setSelectedLocation(todoToEdit.location)
+        setSelectedLocation(todoToEdit.location);
     }
-  }, [isDialogOpen ,todoToEdit])
+  }, [isDialogOpen ,todoToEdit]);
 
   return (
     <Dialog open={isDialogOpen} onClose={handleCancel} fullWidth maxWidth='xs' PaperProps={{style: { borderRadius: 12 }}}>

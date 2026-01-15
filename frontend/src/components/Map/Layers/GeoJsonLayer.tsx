@@ -5,7 +5,8 @@ import { Vector as VectorSource } from 'ol/source';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Style, Icon } from 'ol/style';
 
-import { useMap } from '../MapContext';
+import { mapInstanceAtom } from '../../../atoms/mapAtoms';
+import { useAtomValue } from 'jotai';
 
 interface GeoJsonLayerProps {
   name: string; 
@@ -16,7 +17,7 @@ interface GeoJsonLayerProps {
 
 const GeoJsonLayer = ({ name, data, zIndex, tooltipField }: GeoJsonLayerProps) => {
 
-  const { map } = useMap();
+  const map = useAtomValue(mapInstanceAtom);
 
   const sourceRef = useRef(new VectorSource()); // the warehouse of the data, stores the features
   const layerRef = useRef(new VectorLayer({ // decide how to show the data (colors, opacity ...)

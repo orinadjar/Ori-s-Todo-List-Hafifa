@@ -3,11 +3,12 @@ import { useEffect } from "react"
 import TileLayer from "ol/layer/Tile"
 import OSM from "ol/source/OSM"
 
-import { useMap } from "../MapContext"
+import { mapInstanceAtom } from "../../../atoms/mapAtoms"
+import { useAtomValue } from "jotai"
 
 const BaseLayer = () => {
 
-    const { map } = useMap();
+    const map  = useAtomValue(mapInstanceAtom);
 
     useEffect(() => {
         if (!map) return;

@@ -1,0 +1,32 @@
+{
+  "name": "ori-s-todo-list-hafifa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:frontend": "cd frontend && npm run dev",
+    "start:backend": "cd backend && npm run start:dev",
+    "dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orinadjar/Ori-s-Todo-List-Hafifa.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/orinadjar/Ori-s-Todo-List-Hafifa/issues"
+  },
+  "homepage": "https://github.com/orinadjar/Ori-s-Todo-List-Hafifa#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@nestjs/mapped-types": "^2.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3"
+  }
+}

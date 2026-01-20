@@ -62,9 +62,9 @@ const MapComponent = ({ onLocationSelect, todos = [] }: Props) => {
 
         VectorSourceRef.current.clear();
 
-        const features = todos.filter(t => t.location).map((todo) => {
+        const features = todos.filter(t => t.lat !== null && t.lng != null).map((todo) => {
             const feature = new Feature({
-                geometry: new Point(todo.location),
+                geometry: new Point([todo.lat, todo.lng]),
                 name: todo.name,
             });
 

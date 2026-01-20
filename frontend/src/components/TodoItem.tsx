@@ -6,8 +6,7 @@ import DoneIcon from '@mui/icons-material/Done';
 
 import type { Todo } from '../types/types';
 
-import { useSetAtom } from 'jotai';
-import { deleteTodoAtom, toggleTodoAtom } from '../atoms/todoAtoms';
+import { useTodos } from '../hooks/useTodos';
 
 interface Props {
     todo: Todo;
@@ -15,8 +14,7 @@ interface Props {
 }
 
 const TodoItem = ({ todo, openEditDialog }: Props) => {
-    const deleteTodo = useSetAtom( deleteTodoAtom );
-    const toggleTodo = useSetAtom( toggleTodoAtom );
+    const { deleteTodo, toggleTodo } = useTodos();
 
     const getPriorityColor = (priority: number): string | undefined => {
         if (priority > 0 && priority <= 2) return '#a6a6a6ff'; 

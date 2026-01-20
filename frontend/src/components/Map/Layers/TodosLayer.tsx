@@ -3,20 +3,19 @@ import GeoJsonLayer from "./GeoJsonLayer"
 import completedIcon from '../../../assets/green-selector-icon.png';
 import unCompletedIcon from '../../../assets/selector-icon.png';
 
-import { useAtom } from "jotai";
-import { filteredTodosAtom } from "../../../atoms/todoAtoms";
+import { useTodos } from "../../../hooks/useTodos";
 
 const TodosLayer = () => {
 
-    const [ filteredTodos ] = useAtom(filteredTodosAtom);
+    const { todos } = useTodos();
 
     const todosGeoJson = {
         type: 'FeatureCollection',
-        features: filteredTodos.filter( todo => todo.location ).map(todo => ({
+        features: todos.filter( todo => todo.lat !== null && todo.lng !== null ).map(todo => ({
             type: 'Feature',
             geometry: {
                 type: 'Point',
-                coordinates: todo.location
+                coordinates: [todo.lat, todo.lng]
             },
             properties: {
                 id: todo.id,

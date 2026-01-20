@@ -3,14 +3,13 @@ import { Link } from 'react-router-dom';
 
 import { AppBar, Toolbar, Typography, Box, Chip, Tab, Tabs } from '@mui/material';
 
-import { useAtom } from 'jotai';
-import { filteredTodosAtom } from '../atoms/todoAtoms';
+import { useTodos } from '../hooks/useTodos';
 
 const Header = () => {
-  const [ filteredTodos ] = useAtom(filteredTodosAtom)
+  const { todos } = useTodos();
   
-  const completed = filteredTodos.filter(todo => todo.isCompleted).length;
-  const total = filteredTodos.length;
+  const completed = todos.filter(todo => todo.isCompleted).length;
+  const total = todos.length;
 
   const location = useLocation();
 

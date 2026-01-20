@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { Dialog, DialogTitle,DialogContent, TextField, 
-         Button, Stack, MenuItem, Box } from "@mui/material";
+import {
+  Dialog, DialogTitle, DialogContent, TextField,
+  Button, Stack, MenuItem, Box
+} from "@mui/material";
 
 import dayjs, { Dayjs } from 'dayjs';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -14,10 +16,9 @@ import MapComponent from "./MapComponent";
 
 import type { Todo } from "../types/types";
 
-import { useAtom, useSetAtom } from "jotai";
-import { filteredTodosAtom, addTodoAtom, updateTodoAtom } from "../atoms/todoAtoms";
+import { useTodos } from "../hooks/useTodos";
 
-const SUBJECTS: TodoSubject[] = ['Work' , 'Personal' , 'Military' , 'Urgent' , 'General']
+const SUBJECTS: TodoSubject[] = ['Work', 'Personal', 'Military', 'Urgent', 'General']
 
 interface Props {
   isDialogOpen: boolean;
@@ -26,9 +27,7 @@ interface Props {
 }
 
 const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
-  const addTodo = useSetAtom( addTodoAtom );
-  const updateTodo = useSetAtom( updateTodoAtom );
-  const [ filteredTodos ] = useAtom(filteredTodosAtom);
+  const { todos, addTodo, updateTodo } = useTodos();
 
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');
@@ -36,7 +35,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
   const [date, setDate] = useState<Dayjs | null>(dayjs('2026-01-01'));
   const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
 
-  const todoToEdit = editingTodoId ? filteredTodos.find((t) => t.id === editingTodoId) : null;
+  const todoToEdit = editingTodoId ? todos.find((t) => t.id === editingTodoId) : null;
 
   const handleCancel = () => {
     setName('');
@@ -48,33 +47,41 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
   }
 
   const handleSubmit = () => {
-    if(name.trim() && date && selectedLocation){
+    if (name.trim() && date && selectedLocation) {
       const finalDate = new Date(date.format('YYYY-MM-DD'));
 
       if (editingTodoId) {
-        updateTodo(editingTodoId, { name, subject: subject as TodoSubject, priority, date: finalDate, location: selectedLocation });
+        updateTodo({ todoId: editingTodoId, fields: { name, subject: subject as TodoSubject, priority, date: finalDate, lat: selectedLocation[0], lng: selectedLocation[1] } });
       } else {
-        addTodo(name, subject as TodoSubject, priority, finalDate, selectedLocation);
+        addTodo({
+          name,
+          subject: subject as TodoSubject,
+          priority,
+          date: finalDate,
+          lat: selectedLocation[0],
+          lng: selectedLocation[1],
+        });
       }
-
       handleCancel();
     } else if (!selectedLocation) {
       alert('Most enter a location on the map!');
     }
   }
 
-  useEffect(() =>  {
-    if(isDialogOpen && todoToEdit){
-        setName(todoToEdit.name);
-        setSubject(todoToEdit.subject);
-        setPriority(todoToEdit.priority);
-        setDate(dayjs(todoToEdit.date));
-        setSelectedLocation(todoToEdit.location);
+  useEffect(() => {
+    if (isDialogOpen && todoToEdit) {
+      setName(todoToEdit.name);
+      setSubject(todoToEdit.subject);
+      setPriority(todoToEdit.priority);
+      setDate(dayjs(todoToEdit.date));
+      if (todoToEdit.lat !== undefined && todoToEdit.lng !== undefined) {
+        setSelectedLocation([todoToEdit.lat, todoToEdit.lng]);
+      }
     }
-  }, [isDialogOpen ,todoToEdit]);
+  }, [isDialogOpen, todoToEdit]);
 
   return (
-    <Dialog open={isDialogOpen} onClose={handleCancel} fullWidth maxWidth='xs' PaperProps={{style: { borderRadius: 12 }}}>
+    <Dialog open={isDialogOpen} onClose={handleCancel} fullWidth maxWidth='xs' PaperProps={{ style: { borderRadius: 12 } }}>
       <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', bgcolor: '#f8f9fa' }}>
         Add new Mission
       </DialogTitle>
@@ -82,23 +89,23 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>
 
-          <TextField label="Write your next mission" fullWidth variant="outlined" value={name} 
-                     onChange={(e) => setName(e.target.value)} autoFocus></TextField>
+          <TextField label="Write your next mission" fullWidth variant="outlined" value={name}
+            onChange={(e) => setName(e.target.value)} autoFocus></TextField>
 
-          <TextField select label="Subject" value={subject} 
-                     onChange={(e) => setSubject(e.target.value)} fullWidth>
-              {SUBJECTS.map((sub) => (
-                <MenuItem key={sub} value={sub} >{sub}</MenuItem>
-              ))}
+          <TextField select label="Subject" value={subject}
+            onChange={(e) => setSubject(e.target.value)} fullWidth>
+            {SUBJECTS.map((sub) => (
+              <MenuItem key={sub} value={sub} >{sub}</MenuItem>
+            ))}
           </TextField>
 
           <TextField select label="Priority" value={priority} onChange={(e) => setPriority(Number(e.target.value))}
-                     fullWidth>
-               {[...Array(10)].map((_, i) => ( 
-                <MenuItem key={i + 1} value={i + 1}>
-                  {i + 1}
-                </MenuItem>
-              ))}
+            fullWidth>
+            {[...Array(10)].map((_, i) => (
+              <MenuItem key={i + 1} value={i + 1}>
+                {i + 1}
+              </MenuItem>
+            ))}
           </TextField>
 
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -110,18 +117,18 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
               />
             </DemoContainer>
           </LocalizationProvider>
-          
+
         </Stack>
 
         {selectedLocation && (
-            <Box sx={{ fontSize: '15px', color: 'gray', mt: 3,fontWeight: 'bold' }}>
-                Location selected: {selectedLocation[0].toFixed(2)}, {selectedLocation[1].toFixed(2)}
-            </Box>
+          <Box sx={{ fontSize: '15px', color: 'gray', mt: 3, fontWeight: 'bold' }}>
+            Location selected: {selectedLocation[0].toFixed(2)}, {selectedLocation[1].toFixed(2)}
+          </Box>
         )}
 
         <Box sx={{ mt: 1, height: '300px', width: '100%', borderRadius: 2 }}>
-            <MapComponent todos={(selectedLocation ? [{ ...todoToEdit, location: selectedLocation }] : []) as Todo[]}
-                          onLocationSelect={(cordinates) => setSelectedLocation(cordinates)}/>
+          <MapComponent todos={(selectedLocation ? [{ ...todoToEdit, lat: selectedLocation[0], lng: selectedLocation[1] }] : []) as Todo[]}
+            onLocationSelect={(cordinates) => setSelectedLocation(cordinates)} />
         </Box>
 
       </DialogContent>
@@ -131,7 +138,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
           Cancel
         </Button>
 
-        <Button onClick={handleSubmit} variant="contained" disabled={!name.trim()} sx={{ ml: 25,px: 4, borderRadius: 2 }}>
+        <Button onClick={handleSubmit} variant="contained" disabled={!name.trim()} sx={{ ml: 25, px: 4, borderRadius: 2 }}>
           {isDialogOpen && editingTodoId ? 'Update' : 'Add Task'}
         </Button>
       </DialogContent>

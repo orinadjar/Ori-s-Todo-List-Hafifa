@@ -29,11 +29,11 @@ function App() {
 
   return (
     <>
-      <CssBaseline />
+        <CssBaseline />
 
-      <Header />
-      
-      <Outlet context={{ openEditDialog,  handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog}}/>
+        <Header />
+        
+        <Outlet context={{ openEditDialog,  handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog}}/>
     </>
   )
 }

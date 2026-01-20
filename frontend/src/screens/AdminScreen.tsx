@@ -25,8 +25,7 @@ import type { Todo } from "../types/types";
 
 import TodoDialog from "../components/TodoDialog";
 import ControlPanel from "../components/ControlPanel";
-import { useAtom, useSetAtom } from "jotai";
-import { deleteTodoAtom, filteredTodosAtom, toggleTodoAtom } from "../atoms/todoAtoms";
+import { useTodos } from "../hooks/useTodos";
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
@@ -37,9 +36,7 @@ interface AdminOutletContext {
 }
 
 const AdminScreen = () => {
-  const toggleTodo = useSetAtom( toggleTodoAtom );
-  const deleteTodo = useSetAtom( deleteTodoAtom );
-  const [ filteredTodos ] = useAtom(filteredTodosAtom); 
+  const { todos, deleteTodo, toggleTodo } = useTodos();
   
   const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
 
@@ -68,20 +65,22 @@ const AdminScreen = () => {
       header: 'Completed',
       cell: info => info.getValue() ? 'Yes' : 'No',
     }),
-    columnHelper.accessor('location', {
+    columnHelper.display({
+      id: 'location',
       header: 'Location',
-      cell: info => {
-        const coords = info.getValue();
-        if(!coords) return '-';
+      cell: ({ row }) => {
+        const { lat, lng } = row.original;
+
+        if (lat === null || lng === null) return '-';
 
         return (
-          <Typography>
-            {`${coords[0].toFixed(2)}, ${coords[1].toFixed(2)}`}
+          <Typography variant="body2">
+            {`${lat.toFixed(2)}, ${lng.toFixed(2)}`}
           </Typography>
-        )
+        );
       },
     }),
-    columnHelper.display({
+        columnHelper.display({
       id: 'actions',
       header: 'Actions',
       enableSorting: false,
@@ -112,7 +111,7 @@ const AdminScreen = () => {
   ];
 
   const table = useReactTable({
-    data: filteredTodos,
+    data: todos,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),

@@ -3,7 +3,7 @@ import { DATABASE_CONNECTION } from 'src/db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
 
-import { CreateTodoDto, UpdateTodoDto } from './dto/todos.dto';
+import { CreateTodoDto, TodoGeometryType, UpdateTodoDto } from './dto/todos.dto';
 
 import * as schema from '../db/schema';
 import { todos } from '../db/schema';
@@ -16,7 +16,18 @@ export class TodosService {
 
     // GET GetAllTodos
     async findAllTodos() {
-        return await this.db.select().from(todos);
+        return await this.db.select({
+            id: todos.id,
+            name: todos.name,
+            subject: todos.subject,
+            priority: todos.priority,
+            date: todos.date,
+            isCompleted: todos.isCompleted,
+            geometryType: todos.geometryType,
+            lat: todos.lat,
+            lng: todos.lng,
+            coordinates: sql`ST_AsGeoJSON(${todos.geom})::json->'coordinates'`
+        }).from(todos);
     }
 
     //GET GetOneTodo
@@ -26,8 +37,19 @@ export class TodosService {
 
     // CREATE: AddTodo
     async addTodo(createTodoDto: CreateTodoDto) {
+        const { geometryType, coordinates, ...rest } = createTodoDto;
+
+        const geomValue = geometryType === TodoGeometryType.Polygon && coordinates
+                          ? sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
+                            type: 'Polygon',
+                            coordinates: coordinates,
+                          })}), 4326)`
+                          : sql`ST_SetSRID(ST_MakePoint(${rest.lng}, ${rest.lat}), 4326)`
+
         const newTodo = await this.db.insert(todos).values({
-            ...createTodoDto,
+            ...rest,
+            geometryType: geometryType,
+            geom: geomValue,
             isCompleted: false,
         }).returning();
 
@@ -45,8 +67,14 @@ export class TodosService {
     }
 
     async updateTodo(id: string, updateTodoDto: UpdateTodoDto) {
-        const updatedTodo = await this.db.update(todos).set(updateTodoDto)
-        .where(eq(todos.id, id)).returning();
+        const geometryType = updateTodoDto.geometryType;
+
+        const updatedTodo = await this.db.update(todos).set({
+            ...updateTodoDto,
+            ...(geometryType !== 'Polygon'
+                ? { geom: sql`ST_SetSRID(ST_MakePoint(${updateTodoDto.lng}, ${updateTodoDto.lat}), 4326)` }
+                : {}),
+        }).where(eq(todos.id, id)).returning();
 
         console.log(updatedTodo);
 

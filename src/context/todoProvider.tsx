@@ -23,7 +23,12 @@ export function TodoProvider({ children }: Props){
     const [searchQuery, setSearchQuery] = useState('');
     
     // throttling
-    useThrottling(todos);
+    useThrottling({
+        trigger: todos, 
+        cb: () => {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        },
+        timeout: 300});
 
     const debouncedSearch = useDebounce(searchQuery, 300);
 

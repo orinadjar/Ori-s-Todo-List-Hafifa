@@ -39,10 +39,18 @@ const GeoJsonLayer = ({ name, data, zIndex, tooltipField }: GeoJsonLayerProps) =
       }
 
       if(feature.getGeometry()?.getType() === 'Polygon'){
-        feature.setStyle(new Style({
-            stroke: new Stroke({ color: '#3f51b5', width: 3 }),
-            fill: new Fill({ color: 'rgba(63, 81, 181, 0.2)' }),
-        }));
+
+        if(feature.getProperties().tooltipContent.isCompleted){
+          feature.setStyle(new Style({
+            stroke: new Stroke({ color: '#2bcd3b', width: 3 }),
+            fill: new Fill({ color: 'rgba(76, 234, 29, 0.2)' }),
+          }));
+        }else {
+          feature.setStyle(new Style({
+              stroke: new Stroke({ color: '#3f51b5', width: 3 }),
+              fill: new Fill({ color: 'rgba(63, 81, 181, 0.2)' }),
+          }));
+        }
       }
 
       if(feature.getProperties().icon){

@@ -9,6 +9,7 @@ import MapContainer from '../components/Map/MapContainer.tsx';
 import BaseLayer from '../components/Map/Layers/BaseLayer.tsx';
 import TodosLayer from '../components/Map/Layers/TodosLayer.tsx';
 import StatesLayer from '../components/Map/Layers/StatesLayer.tsx';
+import SearchGeoLayer from '../components/Map/Layers/SearchGeoLayer.tsx';
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
@@ -38,6 +39,7 @@ const UserScreen = () => {
             <BaseLayer />
             <StatesLayer />
             <TodosLayer />
+            <SearchGeoLayer />
           </MapContainer>
         </Box>
 

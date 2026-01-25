@@ -1,17 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { Todo } from '../types/types';
+import { useAtomValue } from 'jotai';
+import { isSearchGeometryAtom, searchGeoJsonAtom } from '../atoms/mapAtoms';
 
 const TODO_URL = `${import.meta.env.VITE_API_URL}/todos`;
 
 export const useTodos = (searchTerm?: string, id?: string) => {
     const queryClient = useQueryClient();
+    const searchGeoJson = useAtomValue(searchGeoJsonAtom);
+    const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
 
     // GET: GetAllTodos
     const { data: todos = [], isLoading, error } = useQuery<Todo[]>({
-        queryKey: ['todos'],
+        queryKey: ['todos', searchGeoJson, isSearchGeometry],
         queryFn: async () => {
-            const res = await fetch(TODO_URL);
+            let res: Response;
+
+            if(searchGeoJson && isSearchGeometry){
+                res = await fetch(TODO_URL + `?filterGeometry=${searchGeoJson}`);
+                return res.json();
+            }else {
+                res = await fetch(TODO_URL);
+            }
+
             return res.json();
         },
         select: (data) => {

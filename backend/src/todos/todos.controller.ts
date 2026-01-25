@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 
 import { TodosService } from './todos.service';
 import { CreateTodoDto, UpdateTodoDto } from './dto/todos.dto'
@@ -9,8 +9,8 @@ export class TodosController {
     constructor(private readonly todosService: TodosService) { };
 
     @Get()
-    findAll() {
-        return this.todosService.findAllTodos();
+    findAll(@Query('filterGeometry') filterGeometry?: string) {
+        return this.todosService.findAllTodos(filterGeometry);
     }
 
     @Get(':id')

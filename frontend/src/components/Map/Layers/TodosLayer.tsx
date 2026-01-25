@@ -4,10 +4,14 @@ import completedIcon from '../../../assets/green-selector-icon.png';
 import unCompletedIcon from '../../../assets/selector-icon.png';
 
 import { useTodos } from "../../../hooks/useTodos";
+import { useAtomValue } from "jotai";
+import { debouncedSearchAtom } from "../../../atoms/todoAtoms";
 
 const TodosLayer = () => {
 
-    const { todos } = useTodos();
+    const searchTerm = useAtomValue(debouncedSearchAtom);
+
+    const { todos } = useTodos(searchTerm);
 
     todos.map((todo) => console.log(todo));
 
@@ -26,6 +30,7 @@ const TodosLayer = () => {
                 tooltipContent: {
                     name: todo.name,
                     priority: todo.priority,
+                    isCompleted: todo.isCompleted,
                     date: todo.date.toString().slice(0, 10),
                     subject: todo.subject,
                 }

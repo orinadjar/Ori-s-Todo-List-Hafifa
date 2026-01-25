@@ -81,7 +81,7 @@ const AdminScreen = () => {
 
         return (
           <Typography variant="body2">
-            {`${lat.toFixed(2)}, ${lng.toFixed(2)}`}
+            {row.original.geometryType === 'Point' ? `${lat.toFixed(2)}, ${lng.toFixed(2)}` : `${row.original.coordinates?.toString().substring(0,15)}....`}
           </Typography>
         );
       },

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 
 import { TodoContext } from "./todoContext";
 import type { Todo, TodoSubject } from "../types/types";
@@ -37,7 +37,7 @@ export function TodoProvider({ children }: Props){
         return todos.filter((todo) => todo.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
     }, [debouncedSearch, todos]);
 
-    const addTodo = (name: string, subject: TodoSubject, priority: number, date: Date) => {
+    const addTodo = (name: string, subject: TodoSubject, priority: number, date: Date, location: [number, number]) => {
         const newTodo: Todo = {
             id: crypto.randomUUID(),
             name,
@@ -45,6 +45,7 @@ export function TodoProvider({ children }: Props){
             priority,
             date,
             isCompleted: false,
+            location,
         };
         setTodos((prev) => [...prev, newTodo]);
     };

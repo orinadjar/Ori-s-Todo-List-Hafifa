@@ -1,13 +1,15 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 
-import { useMap } from "../MapContext"
+import { mapInstanceAtom } from "../../atoms/mapAtoms";
+import { useAtomValue } from "jotai";
 
 import { Layer } from 'ol/layer';
 import { Checkbox, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
 
 const MapHud = () => {
 
-    const { map } = useMap();
+    const map = useAtomValue(mapInstanceAtom);
+    
     const [layers, setLayers] = useState<Layer[]>([]);
     const [visibleLayers, setVisibleLayers] = useState<{ [key: string]: boolean }>({});
 

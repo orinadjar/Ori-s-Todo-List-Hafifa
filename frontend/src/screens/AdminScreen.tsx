@@ -21,11 +21,12 @@ import {
 
 import { useOutletContext } from 'react-router-dom';
 
-import { useTodos } from "../context/todoContext"
 import type { Todo } from "../types/types";
 
 import TodoDialog from "../components/TodoDialog";
 import ControlPanel from "../components/ControlPanel";
+import { useAtom, useSetAtom } from "jotai";
+import { deleteTodoAtom, filteredTodosAtom, toggleTodoAtom } from "../atoms/todoAtoms";
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
@@ -36,7 +37,10 @@ interface AdminOutletContext {
 }
 
 const AdminScreen = () => {
-  const { filteredTodos, deleteTodo, toggleTodo } = useTodos();
+  const toggleTodo = useSetAtom( toggleTodoAtom );
+  const deleteTodo = useSetAtom( deleteTodoAtom );
+  const [ filteredTodos ] = useAtom(filteredTodosAtom); 
+  
   const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
 
   const columnHelper = createColumnHelper<Todo>();

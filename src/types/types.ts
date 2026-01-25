@@ -7,4 +7,5 @@ export interface Todo {
   priority: number;    
   date: Date;       
   isCompleted: boolean; 
+  location: [number, number];
 }

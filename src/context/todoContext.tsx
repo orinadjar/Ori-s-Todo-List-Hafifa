@@ -6,7 +6,7 @@ export interface TodoContextType {
     filteredTodos: Todo[];
     searchQuery: string;
     setSearchQuery: (query: string) => void;
-    addTodo: (name: string, subject: TodoSubject, priority: number, date: Date) => void;
+    addTodo: (name: string, subject: TodoSubject, priority: number, date: Date, location: [number, number]) => void;
     deleteTodo: (id: string) => void;
     toggleTodo: (id: string) => void;
     updateTodo: (id: string, updatedFields: Partial<Omit<Todo, 'id'>>) => void; // Partial with Omit makes all fields optional except 'id'

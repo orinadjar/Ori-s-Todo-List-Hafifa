@@ -15,8 +15,8 @@ export class TodosService {
     ) { }
 
     // GET GetAllTodos
-    async findAllTodos() {
-        return await this.db.select({
+    async findAllTodos(filterGeometry?: string) {
+        let query = this.db.select({
             id: todos.id,
             name: todos.name,
             subject: todos.subject,
@@ -27,7 +27,13 @@ export class TodosService {
             lat: todos.lat,
             lng: todos.lng,
             coordinates: sql`ST_AsGeoJSON(${todos.geom})::json->'coordinates'`
-        }).from(todos);
+        }).from(todos).$dynamic();
+
+        if(filterGeometry){
+            query = query.where(sql`ST_Intersects(${todos.geom}, ST_SetSRID(ST_GeomFromGeoJSON(${filterGeometry}), 4326))`)
+        }
+
+        return await query;
     }
 
     //GET GetOneTodo
@@ -73,7 +79,12 @@ export class TodosService {
             ...updateTodoDto,
             ...(geometryType !== 'Polygon'
                 ? { geom: sql`ST_SetSRID(ST_MakePoint(${updateTodoDto.lng}, ${updateTodoDto.lat}), 4326)` }
-                : {}),
+                : { geom: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
+                    type: 'Polygon',
+                    coordinates: updateTodoDto.coordinates
+                  })}), 4326)` 
+                  }
+                ),
         }).where(eq(todos.id, id)).returning();
 
         console.log(updatedTodo);

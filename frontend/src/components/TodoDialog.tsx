@@ -12,7 +12,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import type { TodoSubject } from "../types/types";
-import MapComponent from "./MapComponent";
+import TodoMapComponent from "./TodoMapComponent";
 
 import type { Todo } from "../types/types";
 
@@ -28,7 +28,7 @@ interface Props {
 
 const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
   const { todos, addTodo, updateTodo } = useTodos();
-
+  
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');
   const [priority, setPriority] = useState(2);
@@ -84,13 +84,14 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
       setDate(dayjs(todoToEdit.date));
       setGeometryType(todoToEdit.geometryType);
 
-      if (todoToEdit.geometryType === 'Polygon' && todoToEdit.coordinates) {
+      if (todoToEdit.geometryType === 'Polygon' && todoToEdit.lat === 0 && todoToEdit.lng === 0 && todoToEdit.coordinates) {
         setPolygonCoordinates(todoToEdit.coordinates);
         setPointCoordinates(null);
       }
       else if (todoToEdit.geometryType === 'Point' && todoToEdit.lat !== undefined && todoToEdit.lng !== undefined) {
-            setPointCoordinates([todoToEdit.lat, todoToEdit.lng]);
-            setPolygonCoordinates(null);      }
+        setPointCoordinates([todoToEdit.lat, todoToEdit.lng]);
+        setPolygonCoordinates(null);
+      }
     }
   }, [isDialogOpen, todoToEdit]);
 
@@ -151,13 +152,13 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
         </TextField>
 
         {locationText && (
-        <Box sx={{ fontSize: '15px', color: 'gray', mt: 3, fontWeight: 'bold' }}>
-          Location selected: {locationText}
-        </Box>
+          <Box sx={{ fontSize: '15px', color: 'gray', mt: 3, fontWeight: 'bold' }}>
+            Location selected: {locationText}
+          </Box>
         )}
 
         <Box sx={{ mt: 1, height: '300px', width: '100%', borderRadius: 2 }}>
-          <MapComponent
+          <TodoMapComponent
             mode={geometryType}
             todos={[
               {
@@ -165,7 +166,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
                 geometryType: geometryType,
                 lat: geometryType === 'Point' && pointCoordinates ? pointCoordinates[0] : 0,
                 lng: geometryType === 'Point' && pointCoordinates ? pointCoordinates[1] : 0,
-                coordinates: geometryType === 'Polygon' ? polygonCoordinates : undefined,
+                coordinates: geometryType === 'Polygon' && todoToEdit?.lat === 0 && todoToEdit.lng === 0 ? todoToEdit?.coordinates : undefined,
               }
             ] as Todo[]}
             onLocationSelect={(cordinates) => setPointCoordinates(cordinates)}

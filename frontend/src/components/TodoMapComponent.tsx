@@ -46,8 +46,8 @@ const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: P
                 vectorLayer // math icons layer
             ],
             view: new View({
-                center: [3874286.4007465374, 3670794.1879844004],
-                zoom: 8,
+                center: [3870552.51, 3662616.19],
+                zoom: 6,
             }),
         });
 
@@ -105,7 +105,8 @@ const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: P
         const features = todos.map((todo) => {
             let feature: Feature;
 
-            if(todo.geometryType === 'Polygon' && todo.coordinates) {
+            if(todo.geometryType === 'Polygon' && todo.coordinates ) {
+                console.log(todo);
                 feature = new Feature({
                     geometry: new Polygon(todo.coordinates),
                     name: todo.name

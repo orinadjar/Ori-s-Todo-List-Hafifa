@@ -27,6 +27,9 @@ import TodoDialog from "../components/TodoDialog";
 import ControlPanel from "../components/ControlPanel";
 import { useTodos } from "../hooks/useTodos";
 
+import { useAtomValue } from "jotai";
+import { debouncedSearchAtom } from "../atoms/todoAtoms";
+
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
   handleOpenDialog: () => void;
@@ -36,7 +39,10 @@ interface AdminOutletContext {
 }
 
 const AdminScreen = () => {
-  const { todos, deleteTodo, toggleTodo } = useTodos();
+
+  const searchTerm = useAtomValue(debouncedSearchAtom);
+  
+  const { todos, deleteTodo, toggleTodo } = useTodos(searchTerm);
   
   const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
 

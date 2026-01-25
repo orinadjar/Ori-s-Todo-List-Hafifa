@@ -9,18 +9,20 @@ const TodosLayer = () => {
 
     const { todos } = useTodos();
 
+    todos.map((todo) => console.log(todo));
+
     const todosGeoJson = {
         type: 'FeatureCollection',
-        features: todos.filter( todo => todo.lat !== null && todo.lng !== null ).map(todo => ({
+        features: todos.map(todo => ({
             type: 'Feature',
             geometry: {
-                type: 'Point',
-                coordinates: [todo.lat, todo.lng]
+                type: todo.geometryType === 'Point' ? 'Point' : 'Polygon',
+                coordinates: todo.lat !== 0 && todo.lng !== 0 ? [todo.lat, todo.lng] : todo.coordinates,
             },
             properties: {
                 id: todo.id,
                 name: todo.name,
-                icon: todo.isCompleted ? completedIcon : unCompletedIcon,
+                icon: todo.geometryType === 'Point' ? todo.isCompleted ? completedIcon : unCompletedIcon : undefined,
                 tooltipContent: {
                     name: todo.name,
                     priority: todo.priority,

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DATABASE_CONNECTION } from 'src/db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, lt, sql } from 'drizzle-orm';
 
 import { CreateTodoDto, TodoGeometryType, UpdateTodoDto } from './dto/todos.dto';
 
@@ -29,16 +29,14 @@ export class TodosService {
             coordinates: sql`ST_AsGeoJSON(${todos.geom})::json->'coordinates'`
         }).from(todos).$dynamic();
 
-        if(filterGeometry){
+        if (filterGeometry) {
+
             query = query.where(sql`ST_Intersects(${todos.geom}, ST_SetSRID(ST_GeomFromGeoJSON(${filterGeometry}), 4326))`)
         }
 
-        return await query;
-    }
+        console.log(query.toSQL().sql);
 
-    //GET GetOneTodo
-    async findOneTodo(id: string) {
-        return await this.db.select().from(todos).where(eq(todos.id, id));
+        return await query;
     }
 
     // CREATE: AddTodo
@@ -46,11 +44,11 @@ export class TodosService {
         const { geometryType, coordinates, ...rest } = createTodoDto;
 
         const geomValue = geometryType === TodoGeometryType.Polygon && coordinates
-                          ? sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
-                            type: 'Polygon',
-                            coordinates: coordinates,
-                          })}), 4326)`
-                          : sql`ST_SetSRID(ST_MakePoint(${rest.lng}, ${rest.lat}), 4326)`
+            ? sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
+                type: 'Polygon',
+                coordinates: coordinates,
+            })}), 4326)`
+            : sql`ST_SetSRID(ST_MakePoint(${rest.lng}, ${rest.lat}), 4326)`
 
         const newTodo = await this.db.insert(todos).values({
             ...rest,
@@ -64,6 +62,7 @@ export class TodosService {
         return newTodo[0];
     }
 
+    // DELETE deleteTodo
     async deleteTodo(id: string) {
         const deletedTodo = await this.db.delete(todos).where(eq(todos.id, id)).returning();
 
@@ -72,6 +71,7 @@ export class TodosService {
         return deletedTodo[0];
     }
 
+    // PATCH updateTodo
     async updateTodo(id: string, updateTodoDto: UpdateTodoDto) {
         const geometryType = updateTodoDto.geometryType;
 
@@ -79,12 +79,13 @@ export class TodosService {
             ...updateTodoDto,
             ...(geometryType !== 'Polygon'
                 ? { geom: sql`ST_SetSRID(ST_MakePoint(${updateTodoDto.lng}, ${updateTodoDto.lat}), 4326)` }
-                : { geom: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
-                    type: 'Polygon',
-                    coordinates: updateTodoDto.coordinates
-                  })}), 4326)` 
-                  }
-                ),
+                : {
+                    geom: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
+                        type: 'Polygon',
+                        coordinates: updateTodoDto.coordinates
+                    })}), 4326)`
+                }
+            ),
         }).where(eq(todos.id, id)).returning();
 
         console.log(updatedTodo);
@@ -92,6 +93,7 @@ export class TodosService {
         return updatedTodo[0];
     }
 
+    // PATCH toggleTodo
     async toggleTodo(id: string) {
         const toggledTodo = await this.db.update(todos).set({
             isCompleted: sql`NOT ${todos.isCompleted}`,
@@ -102,5 +104,18 @@ export class TodosService {
         return toggledTodo[0];
     }
 
+    // CRONJOB cleanOldTasks
+    async cleanOldTasks() {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
+        const deletedOldTodos = await this.db.delete(todos).where(
+            and(
+                eq(todos.isCompleted, true),
+                lt(todos.date, oneWeekAgo)
+            )
+        ).returning();
+
+        return deletedOldTodos;
+    }
 }

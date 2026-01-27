@@ -17,11 +17,26 @@ export const useTodos = (searchTerm?: string, id?: string) => {
         queryFn: async () => {
             let res: Response;
 
+            const options: RequestInit = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
             if(searchGeoJson && isSearchGeometry){
-                res = await fetch(TODO_URL + `?filterGeometry=${searchGeoJson}`);
-                return res.json();
-            }else {
-                res = await fetch(TODO_URL);
+                options.method = 'POST';
+                options.body = JSON.stringify({
+                    filterGeometry: searchGeoJson
+                }); 
+
+                res = await fetch(TODO_URL + '/filter', options);
+            }
+            else 
+                res = await fetch(TODO_URL, options);
+            
+            if(!res.ok) {
+                throw new Error(`Error: ${ res.statusText }`);
             }
 
             return res.json();

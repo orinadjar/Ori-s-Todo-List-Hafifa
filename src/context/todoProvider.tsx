@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 
 import { TodoContext } from "./todoContext";
 import type { Todo, TodoSubject } from "../types/types";
@@ -23,12 +23,11 @@ export function TodoProvider({ children }: Props){
     const [searchQuery, setSearchQuery] = useState('');
     
     // throttling
-    useThrottling({
-        trigger: todos, 
-        cb: () => {
+    useThrottling(
+        useCallback(() => {
             localStorage.setItem('todos', JSON.stringify(todos));
-        },
-        timeout: 300});
+        }, [todos]),
+        300);
 
     const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -76,3 +75,5 @@ export function TodoProvider({ children }: Props){
         </TodoContext.Provider>
     );
 }
+
+

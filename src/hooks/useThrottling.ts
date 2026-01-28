@@ -1,13 +1,6 @@
 import { useRef, useEffect } from "react"
-import type { Todo } from "../types/types"
 
-interface Props {
-    trigger: unknown,
-    cb: () => void,
-    timeout: number
-}
-
-const useThrottling = ({ trigger, cb, timeout }: Props) => {
+const useThrottling = (callback: () => void, timeout : number) => {
 
     const isThrottling = useRef(false);
 
@@ -16,15 +9,15 @@ const useThrottling = ({ trigger, cb, timeout }: Props) => {
         if(isThrottling.current)
             return;
 
-        cb();
-
+        callback();
+        
         isThrottling.current = true;
 
         setTimeout(() => {
             isThrottling.current = false;
         }, timeout)
 
-    }, [trigger, cb, timeout]);
+    }, [callback, timeout]);
 }
 
 export default useThrottling;

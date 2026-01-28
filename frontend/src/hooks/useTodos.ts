@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 
 import type { Todo } from '../types/types';
 import { useAtomValue } from 'jotai';
@@ -12,51 +12,56 @@ export const useTodos = (searchTerm?: string, id?: string) => {
     const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
 
     // GET: GetAllTodos
-    const { data: todos = [], isLoading, error } = useQuery<Todo[]>({
+    const { data, isLoading, error, status, fetchNextPage, hasNextPage } = useInfiniteQuery<Todo[]>({
         queryKey: ['todos', searchGeoJson, isSearchGeometry],
-        queryFn: async () => {
-            let res: Response;
+        queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
+
+            let url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
+            url.searchParams.append('limit', '15');
+            url.searchParams.append('offset', pageParam.toString());
 
             const options: RequestInit = {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
             };
 
-            if(searchGeoJson && isSearchGeometry){
+            if (searchGeoJson && isSearchGeometry) {
                 options.method = 'POST';
                 options.body = JSON.stringify({
                     filterGeometry: searchGeoJson
-                }); 
+                });
+            }
 
-                res = await fetch(TODO_URL + '/filter', options);
-            }
-            else 
-                res = await fetch(TODO_URL, options);
-            
-            if(!res.ok) {
-                throw new Error(`Error: ${ res.statusText }`);
-            }
+            const res = await fetch(url.toString(), options);
+
+            if (!res.ok) throw new Error(`Error: ${res.statusText}`);
 
             return res.json();
         },
-        select: (data) => {
-            if (!searchTerm) return data;
-            return data.filter(todo => 
-                todo.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === 15 ? allPages.length * 15 : undefined;
+        },
+        select: (data) => ({
+            pages: data.pages.map(page => 
+                !searchTerm ? page : page.filter(todo => 
+                    todo.name.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            ),
+            pageParams: data.pageParams,
+        }),
     });
+
+    const todos = data?.pages.flat() || [];
 
     // GET: GetOneTodo
     const { data: todo, isLoading: isSingleLoading } = useQuery<Todo>({
-        queryKey: ['todos', id], 
+        queryKey: ['todos', id],
         queryFn: async () => {
             const res = await fetch(`${TODO_URL}/${id}`);
             return res.json();
         },
-        enabled: !!id 
+        enabled: !!id
     });
 
     // POST: AddTodo
@@ -93,7 +98,7 @@ export const useTodos = (searchTerm?: string, id?: string) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(fields)
             });
-            if(!res.ok) throw new Error('Failed to update todo');
+            if (!res.ok) throw new Error('Failed to update todo');
             return await res.json();
         },
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] })
@@ -105,7 +110,7 @@ export const useTodos = (searchTerm?: string, id?: string) => {
             const res = await fetch(`${TODO_URL}/${todoId}/toggle`, {
                 method: 'PATCH',
             });
-            if(!res.ok) throw new Error('Failed to toggle todo');
+            if (!res.ok) throw new Error('Failed to toggle todo');
             return await res.json();
         },
         onSuccess: () =>
@@ -114,6 +119,9 @@ export const useTodos = (searchTerm?: string, id?: string) => {
 
     return {
         todos,
+        status,
+        fetchNextPage,
+        hasNextPage,
         isLoading,
         error,
         todo,

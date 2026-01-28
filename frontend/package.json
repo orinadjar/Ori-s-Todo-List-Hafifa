@@ -27,6 +27,7 @@
     "ol": "^10.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-intersection-observer": "^10.0.2",
     "react-router-dom": "^7.11.0"
   },
   "devDependencies": {

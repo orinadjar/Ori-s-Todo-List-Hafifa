@@ -26,7 +26,7 @@ const UserScreen = () => {
     <>
       <Box sx={{ height: '100vh', maxHeight: '100vh', display: 'flex' }}>
 
-        <Box sx={{ flex: 1, mr: 1, border: '1px solid #ddd', borderRadius: '8px', overflowY: 'auto', '&::-webkit-scrollbar': { width: '0px' } }}>
+        <Box sx={{ flex: 1, mr: 1, border: '1px solid #ddd', borderRadius: '8px', overflowY: 'auto', '&::-webkit-scrollbar': { width: '0px' }, height: '95%' }}>
           <ControlPanel handleOpenDialog={handleOpenDialog} />
 
           <TodoList openEditDialog={openEditDialog} />

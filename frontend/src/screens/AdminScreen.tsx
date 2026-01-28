@@ -1,9 +1,12 @@
+import { useEffect } from "react";
+
 import { 
   IconButton,
   Table, TableBody, TableCell, 
   TableHead, TableRow , Box,
-  Button,
-  Typography
+  Typography,
+  CircularProgress,
+  TableContainer
 } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,7 +19,6 @@ import {
   flexRender, 
   createColumnHelper,
   getSortedRowModel,
-  getPaginationRowModel
 } from "@tanstack/react-table";
 
 import { useOutletContext } from 'react-router-dom';
@@ -30,6 +32,8 @@ import { useTodos } from "../hooks/useTodos";
 import { useAtomValue } from "jotai";
 import { debouncedSearchAtom } from "../atoms/todoAtoms";
 
+import { useInView } from "react-intersection-observer";
+
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
   handleOpenDialog: () => void;
@@ -42,11 +46,19 @@ const AdminScreen = () => {
 
   const searchTerm = useAtomValue(debouncedSearchAtom);
   
-  const { todos, deleteTodo, toggleTodo } = useTodos(searchTerm);
+  const { todos, deleteTodo, toggleTodo, fetchNextPage, hasNextPage, isLoading, error, status } = useTodos(searchTerm);
+
+  const { ref, inView } = useInView();
   
   const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
 
   const columnHelper = createColumnHelper<Todo>();
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, inView]);
 
   const columns = [
     columnHelper.accessor('name', {
@@ -86,7 +98,7 @@ const AdminScreen = () => {
         );
       },
     }),
-        columnHelper.display({
+      columnHelper.display({
       id: 'actions',
       header: 'Actions',
       enableSorting: false,
@@ -117,95 +129,81 @@ const AdminScreen = () => {
   ];
 
   const table = useReactTable({
-    data: todos,
+    data: todos || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    }
+    autoResetPageIndex: false,
   });
+
+  if (isLoading) return <CircularProgress />
+
+  if (error) return 'An error has occurred while fetching todos...' + error.message;
 
   return (
     <>
-      <ControlPanel handleOpenDialog={handleOpenDialog}/>
+      {status === 'pending' ? <CircularProgress /> : status === 'error' ? 'An error has occured while fetching the todos' :
+      <>
+        <ControlPanel handleOpenDialog={handleOpenDialog}/>
 
-      <Box sx={{ display: 'flex',  justifyContent: 'space-between', width: '100%' }}>
+        <TableContainer sx={{ maxHeight: 1200 ,overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
 
-          <Button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '10px' }}>
-            Previous page
-          </Button>
+              {table.getHeaderGroups().map(headersGroup => (
 
-          <Typography sx={{ fontWeight: 'bold',justifyContent: 'end' }}>
-            page { table.getState().pagination.pageIndex + 1 } of { table.getPageCount() }
-          </Typography>
-
-          <Button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '10px' }}>
-            Next page
-          </Button>
-
-      </Box>
-
-      <Table>
-        <TableHead>
-
-          {table.getHeaderGroups().map(headersGroup => (
-
-            <TableRow key={headersGroup.id}>
-              
-              {headersGroup.headers.map(header => (
-                <TableCell key={header.id}
-                  onClick={header.column.getToggleSortingHandler()}
-                  sx={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none',
-                        '&:hover': header.column.getCanSort() ? { backgroundColor: 'rgba(213, 231, 233, 0.4)' } : undefined }}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
+                <TableRow key={headersGroup.id}>
                   
-                </TableCell>
-              ))} 
+                  {headersGroup.headers.map(header => (
+                    <TableCell key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      sx={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none',
+                            '&:hover': header.column.getCanSort() ? { backgroundColor: 'rgba(213, 231, 233, 0.4)' } : undefined }}>
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      
+                    </TableCell>
+                  ))} 
 
-            </TableRow>
-          ))}
-      
-        </TableHead>
+                </TableRow>
+              ))}
+          
+            </TableHead>
 
-        <TableBody>
+            <TableBody>
 
-          {table.getRowModel().rows.map(row => (
+              {table.getRowModel().rows.map(row => (
 
-            <TableRow key={row.id}
-              sx={{ backgroundColor: row.original.isCompleted ? '#e8f5e9ff' : '#f8ddddff' }}>
-              
-              {row.getVisibleCells().map(cell => (
-                <TableCell key={cell.id}>
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
-                </TableCell>
+                <TableRow key={row.id}
+                  sx={{ backgroundColor: row.original.isCompleted ? '#e8f5e9ff' : '#f8ddddff' }}>
+                  
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+
+                </TableRow>
+
               ))}
 
-            </TableRow>
+            </TableBody>
 
-          ))}
+          </Table>
 
-        </TableBody>
+          <Box ref={ref} sx={{ display: 'flex', justifyContent: 'center', my: 2, mb: 4 }}>
+            {hasNextPage && inView ? <CircularProgress /> : <Typography variant="body2" color="textSecondary">No more todos to load.</Typography>}
+          </Box>
+        </TableContainer>
 
-      </Table>
-
-      <TodoDialog isDialogOpen={isDialogOpen} editingTodoId={editingTodoId} handleCloseDialog={handleCloseDialog}/>
-    
+        <TodoDialog isDialogOpen={isDialogOpen} editingTodoId={editingTodoId} handleCloseDialog={handleCloseDialog}/>
+      </>
+      }
     </>
   )
 }

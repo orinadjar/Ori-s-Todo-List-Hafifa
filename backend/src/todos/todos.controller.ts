@@ -9,13 +9,13 @@ export class TodosController {
     constructor(private readonly todosService: TodosService) { };
 
     @Get()
-    findAll() {
-        return this.todosService.findAllTodos();
+    findAll(@Query('limit') limit: number, @Query('offset') offset: number) {
+        return this.todosService.findAllTodos(limit, offset);
     }
 
     @Post('/filter')
-    findAllFfiltered(@Body('filterGeometry') filterGeometry: string) {
-        return this.todosService.findAllTodos(filterGeometry);
+    findAllFiltered(@Body('filterGeometry') filterGeometry: string, @Query('limit') limit: number, @Query('offset') offset: number) {
+        return this.todosService.findAllTodos(limit, offset, filterGeometry);
     }
 
     @Post()

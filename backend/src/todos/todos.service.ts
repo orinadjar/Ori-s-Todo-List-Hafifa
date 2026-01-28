@@ -15,7 +15,7 @@ export class TodosService {
     ) { }
 
     // GET GetAllTodos
-    async findAllTodos(filterGeometry?: string) {
+    async findAllTodos(limit: number, offset: number, filterGeometry?: string) {
         let query = this.db.select({
             id: todos.id,
             name: todos.name,
@@ -27,7 +27,7 @@ export class TodosService {
             lat: todos.lat,
             lng: todos.lng,
             coordinates: sql`ST_AsGeoJSON(${todos.geom})::json->'coordinates'`
-        }).from(todos).$dynamic();
+        }).from(todos).$dynamic().limit(limit).offset(offset);
 
         if (filterGeometry) {
 

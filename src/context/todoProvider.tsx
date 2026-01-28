@@ -75,5 +75,3 @@ export function TodoProvider({ children }: Props){
         </TodoContext.Provider>
     );
 }
-
-

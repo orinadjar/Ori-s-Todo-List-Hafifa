@@ -41,7 +41,7 @@ const AdminScreen = () => {
 
   const columnHelper = createColumnHelper<Todo>();
 
-  const columns = [
+  const columns = useMemo(() => [
     columnHelper.accessor('name', {
       header: 'Name',
       enableSorting: false,
@@ -92,7 +92,7 @@ const AdminScreen = () => {
         )
       }
     })
-  ];
+  ], [deleteTodo, toggleTodo, openEditDialog]);
 
   const table = useReactTable({
     data: filteredTodos,
@@ -113,7 +113,7 @@ const AdminScreen = () => {
 
       <Box sx={{ display: 'flex',  justifyContent: 'space-between', width: '100%' }}>
 
-          <Button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}
+          <Button onClick={table.previousPage} disabled={!table.getCanPreviousPage()}
             variant="contained"
             color="primary"
             sx={{ borderRadius: '10px' }}>

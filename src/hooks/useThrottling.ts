@@ -1,7 +1,6 @@
 import { useRef, useEffect } from "react"
-import type { Todo } from "../types/types"
 
-const useThrottling = (todos: Todo[]) => {
+const useThrottling = (callback: () => void, timeout : number) => {
 
     const isThrottling = useRef(false);
 
@@ -10,15 +9,15 @@ const useThrottling = (todos: Todo[]) => {
         if(isThrottling.current)
             return;
 
-        localStorage.setItem('todos', JSON.stringify(todos));
-
+        callback();
+        
         isThrottling.current = true;
 
         setTimeout(() => {
             isThrottling.current = false;
-        }, 300)
+        }, timeout)
 
-    }, [todos]);
+    }, [callback, timeout]);
 }
 
 export default useThrottling;

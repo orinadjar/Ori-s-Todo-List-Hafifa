@@ -30,11 +30,10 @@ export class TodosService {
         }).from(todos).$dynamic().limit(limit).offset(offset);
 
         if (filterGeometry) {
-
             query = query.where(sql`ST_Intersects(${todos.geom}, ST_SetSRID(ST_GeomFromGeoJSON(${filterGeometry}), 4326))`)
         }
 
-        console.log(query.toSQL().sql);
+        console.log("--" + query.toSQL().sql);
 
         return await query;
     }

@@ -7,9 +7,7 @@ import { useAtomValue } from "jotai";
 import { debouncedSearchAtom } from "../atoms/todoAtoms";
 
 import { useTodos } from "../hooks/useTodos";
-
-import { useInView } from 'react-intersection-observer';
-import { useEffect } from "react";
+import { useVirtualization } from "../hooks/useVirtualization";
 
 interface Props {
   openEditDialog: (id: string) => void;
@@ -19,41 +17,46 @@ const TodoList = ({ openEditDialog }: Props) => {
 
   const searchTerm = useAtomValue(debouncedSearchAtom);
 
-  const { todos, isLoading, error, status, fetchNextPage, hasNextPage } = useTodos(searchTerm);
+  const { todos, isLoading, error, status, fetchNextPage, hasNextPage, isFetchingNextPage } = useTodos(searchTerm);
 
-  const { ref, inView } = useInView();
-
-  useEffect(() => {
-    if (inView) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, inView]);
+  const { parentRef, rowVirtualizer, virtualRows } = useVirtualization(Math.ceil(todos.length / 3), hasNextPage, isFetchingNextPage, fetchNextPage, 280);
 
   if (isLoading) return <CircularProgress />
 
   if (error) return 'An error has occurred while fetching todos...' + error.message;
+
   return (
     <>
       {status === 'pending' ? <CircularProgress /> : status === 'error' ? 'An error has occured while fetching the todos' :
         <>
-          <Grid container spacing={3} alignItems="stretch" justifyContent="center">
+          <Box ref={parentRef} style={{ overflow: 'auto', height: '85vh', position: 'relative', width: '100%' }}>
             {todos.length === 0 ? (
               <Grid size={{ xs: 2, sm: 4, md: 6, lg: 120 }}>
                 <Typography variant="h6" align="center">
                   No todos found.
                 </Typography>
               </Grid>
-            ) : (
-              todos.map((todo) => (
-                <Grid size={{ xs: 4, sm: 4, md: 4, lg: 4 }} key={todo.id}>
-                  <TodoItem todo={todo} openEditDialog={openEditDialog} />
-                </Grid>
-              ))
-            )}
-          </Grid>
+            ) :
+              <Box sx={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative', width: '100%' }}>
 
-          <Box ref={ref} sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-            {hasNextPage && inView ? <CircularProgress /> : <Typography variant="body2" color="textSecondary">No more todos to load.</Typography>}
+                {virtualRows.map((virtualRow) => {
+                  const startIndex = virtualRow.index * 3;
+                  const rowTodos = todos.slice(startIndex, startIndex + 3);
+
+                  return (
+                    <Box key={virtualRow.key} sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)`}}>
+                      <Grid container spacing={3} sx={{ width: '100%' }}>
+                        {rowTodos.map((todo) => (
+                          <Grid key={todo.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                            <TodoItem todo={todo} openEditDialog={openEditDialog} />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  )
+                })}
+              </Box>
+            }
           </Box>
         </>
       }

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 
 import type { Todo } from '../types/types';
 import { useAtomValue } from 'jotai';
@@ -6,15 +6,21 @@ import { isSearchGeometryAtom, searchGeoJsonAtom } from '../atoms/mapAtoms';
 
 const TODO_URL = `${import.meta.env.VITE_API_URL}/todos`;
 
-export const useTodos = (searchTerm?: string, id?: string) => {
+export const useTodos = (searchTerm?: string) => {
     const queryClient = useQueryClient();
     const searchGeoJson = useAtomValue(searchGeoJsonAtom);
     const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
 
     // GET: GetAllTodos
-    const { data, isLoading, error, status, fetchNextPage, hasNextPage } = useInfiniteQuery<Todo[]>({
+    const { data, isLoading, error, status, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<Todo[]>({
         queryKey: ['todos', searchGeoJson, isSearchGeometry],
         queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
+
+            console.log('useTodos render', {
+                searchGeoJson,
+                isSearchGeometry,
+                searchTerm,
+            });
 
             let url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
             url.searchParams.append('limit', '15');
@@ -42,9 +48,10 @@ export const useTodos = (searchTerm?: string, id?: string) => {
         getNextPageParam: (lastPage, allPages) => {
             return lastPage.length === 15 ? allPages.length * 15 : undefined;
         },
+        refetchOnMount: false,
         select: (data) => ({
-            pages: data.pages.map(page => 
-                !searchTerm ? page : page.filter(todo => 
+            pages: data.pages.map(page =>
+                !searchTerm ? page : page.filter(todo =>
                     todo.name.toLowerCase().includes(searchTerm.toLowerCase())
                 )
             ),
@@ -53,16 +60,6 @@ export const useTodos = (searchTerm?: string, id?: string) => {
     });
 
     const todos = data?.pages.flat() || [];
-
-    // GET: GetOneTodo
-    const { data: todo, isLoading: isSingleLoading } = useQuery<Todo>({
-        queryKey: ['todos', id],
-        queryFn: async () => {
-            const res = await fetch(`${TODO_URL}/${id}`);
-            return res.json();
-        },
-        enabled: !!id
-    });
 
     // POST: AddTodo
     const addMutation = useMutation({
@@ -121,11 +118,10 @@ export const useTodos = (searchTerm?: string, id?: string) => {
         todos,
         status,
         fetchNextPage,
+        isFetchingNextPage,
         hasNextPage,
         isLoading,
         error,
-        todo,
-        isSingleLoading,
         addTodo: addMutation.mutate,
         deleteTodo: deleteMutation.mutate,
         updateTodo: updateMutation.mutate,

@@ -1,7 +1,9 @@
+import { useLocation } from 'react-router-dom';
 
 import { AppBar, Toolbar, Typography, Box, Chip, Tab, Tabs } from '@mui/material';
 
 import { useTodos } from '../context/todoContext';
+import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 
 const Header = () => {
@@ -13,13 +15,21 @@ const Header = () => {
   }, [filteredTodos]);
 
   const total = filteredTodos.length;
+  const location = useLocation();
 
   return (
-    <AppBar position="static" sx={{ bgcolor: 'white', color: 'black', boxShadow: 3, mb: 4 }}>
+    <AppBar position="sticky" sx={{ bgcolor: 'white', color: 'black', boxShadow: 3, mb: 13 }}>
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
           Ori's Todo
         </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Tabs value={location.pathname} textColor='primary' indicatorColor='primary'>
+            <Tab label="Todos" value='/' component={Link} to='/' sx={{ fontWeight: 'bold', textTransform: 'none' }}/>
+            <Tab label="Admin" value='/admintab' component={Link} to='/admintab' sx={{ fontWeight: 'bold', textTransform: 'none' }}/>
+          </Tabs>
+        </Box>
         
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <Chip 

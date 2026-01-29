@@ -36,7 +36,7 @@ export function TodoProvider({ children }: Props){
         return todos.filter((todo) => todo.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
     }, [debouncedSearch, todos]);
 
-    const addTodo = (name: string, subject: TodoSubject, priority: number, date: Date) => {
+    const addTodo = (name: string, subject: TodoSubject, priority: number, date: Date, location: [number, number]) => {
         const newTodo: Todo = {
             id: crypto.randomUUID(),
             name,
@@ -44,6 +44,7 @@ export function TodoProvider({ children }: Props){
             priority,
             date,
             isCompleted: false,
+            location,
         };
         setTodos((prev) => [...prev, newTodo]);
     };
@@ -75,5 +76,3 @@ export function TodoProvider({ children }: Props){
         </TodoContext.Provider>
     );
 }
-
-

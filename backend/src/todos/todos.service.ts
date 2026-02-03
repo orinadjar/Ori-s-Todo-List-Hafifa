@@ -8,14 +8,28 @@ import { CreateTodoDto, TodoGeometryType, UpdateTodoDto } from './dto/todos.dto'
 import * as schema from '../db/schema';
 import { todos } from '../db/schema';
 
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { RedisKeys } from 'src/utils/redisKeys.util';
+
+
 @Injectable()
 export class TodosService {
+    private readonly logger = new Logger(TodosService.name);
+
     constructor(
         @Inject(DATABASE_CONNECTION) private db: NodePgDatabase<typeof schema>,
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
     ) { }
 
     // GET GetAllTodos
     async findAllTodos(limit: number, offset: number, filterGeometry?: string) {
+
+        const cachedTodos = await this.cacheManager.get(RedisKeys.getTodosKey(limit, offset));
+        if (cachedTodos) {
+            this.logger.log('Returning todos from cache');
+            return cachedTodos;
+        }
+
         let query = this.db.select({
             id: todos.id,
             name: todos.name,
@@ -33,9 +47,13 @@ export class TodosService {
             query = query.where(sql`ST_Intersects(${todos.geom}, ST_SetSRID(ST_GeomFromGeoJSON(${filterGeometry}), 4326))`)
         }
 
+        const todosAwait = await query;
+
+        await this.cacheManager.set(RedisKeys.getTodosKey(limit, offset), todosAwait);
+
         console.log("--" + query.toSQL().sql);
 
-        return await query;
+        return todosAwait;
     }
 
     // CREATE: AddTodo
@@ -58,6 +76,8 @@ export class TodosService {
 
         console.log(newTodo);
 
+        await this.clearTodosCache();
+
         return newTodo[0];
     }
 
@@ -66,6 +86,8 @@ export class TodosService {
         const deletedTodo = await this.db.delete(todos).where(eq(todos.id, id)).returning();
 
         console.log(deletedTodo);
+
+        await this.clearTodosCache();
 
         return deletedTodo[0];
     }
@@ -89,6 +111,8 @@ export class TodosService {
 
         console.log(updatedTodo);
 
+        await this.clearTodosCache();
+
         return updatedTodo[0];
     }
 
@@ -99,6 +123,8 @@ export class TodosService {
         }).where(eq(todos.id, id)).returning();
 
         console.log(toggledTodo);
+
+        await this.clearTodosCache();
 
         return toggledTodo[0];
     }
@@ -116,5 +142,15 @@ export class TodosService {
         ).returning();
 
         return deletedOldTodos;
+    }
+
+    // CLEARCACHE clearTodosCache
+    async clearTodosCache() {
+        try {
+            await (this.cacheManager as any).clear();
+            this.logger.log('cleared all todos from cache');
+        } catch (error) {
+            this.logger.log('Failed to clear all todos from cache', error);
+        }
     }
 }

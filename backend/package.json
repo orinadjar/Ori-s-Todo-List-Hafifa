@@ -20,19 +20,26 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@keyv/redis": "^5.1.6",
+    "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.0",
     "@nestjs/typeorm": "^11.0.0",
+    "cache-manager": "^7.2.8",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
+    "ioredis": "^5.9.2",
+    "keyv": "^5.6.0",
+    "nestjs-zod": "^5.1.1",
     "pg": "^8.17.1",
     "postgres": "^3.4.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.28"
+    "typeorm": "^0.3.28",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

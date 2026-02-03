@@ -1,6 +1,5 @@
 import { pgTable, pgEnum, customType } from 'drizzle-orm/pg-core';
 import * as t from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm';
 
 export const todoSubjectEnum = pgEnum('todo_subject', ['Work', 'Personal', 'Military', 'Urgent', 'General']);
 export const todoGeometryTypeEnum = pgEnum('todo_geometry_type', ['Point', 'Polygon']);

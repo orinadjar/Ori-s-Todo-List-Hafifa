@@ -16,12 +16,6 @@ export const useTodos = (searchTerm?: string) => {
         queryKey: ['todos', searchGeoJson, isSearchGeometry],
         queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
 
-            console.log('useTodos render', {
-                searchGeoJson,
-                isSearchGeometry,
-                searchTerm,
-            });
-
             let url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
             url.searchParams.append('limit', '15');
             url.searchParams.append('offset', pageParam.toString());

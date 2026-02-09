@@ -1,15 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DATABASE_CONNECTION } from 'src/db/db.module';
+import { DATABASE_CONNECTION } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, lt, sql } from 'drizzle-orm';
 
-import { CreateTodoDto, TodoGeometryType, UpdateTodoDto } from './dto/todos.dto';
+import { TodoGeometryTypeSchema, type CreateTodoDto, type UpdateTodoDto } from '..//dto/todosDto.dto';
 
 import * as schema from '../db/schema';
 import { todos } from '../db/schema';
 
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-import { RedisKeys } from 'src/utils/redisKeys.util';
+import { RedisKeys } from '../utils/redisKeys.util';
 
 
 @Injectable()
@@ -24,10 +24,12 @@ export class TodosService {
     // GET GetAllTodos
     async findAllTodos(limit: number, offset: number, filterGeometry?: string) {
 
-        const cachedTodos = await this.cacheManager.get(RedisKeys.getTodosKey(limit, offset));
-        if (cachedTodos) {
-            this.logger.log('Returning todos from cache');
-            return cachedTodos;
+        if (!filterGeometry) {
+            const cachedTodos = await this.cacheManager.get(RedisKeys.getTodosKey(limit, offset));
+            if (cachedTodos) {
+                this.logger.log('Returning todos from cache');
+                return cachedTodos;
+            }
         }
 
         let query = this.db.select({
@@ -44,14 +46,16 @@ export class TodosService {
         }).from(todos).$dynamic().limit(limit).offset(offset);
 
         if (filterGeometry) {
+            console.log(filterGeometry)
             query = query.where(sql`ST_Intersects(${todos.geom}, ST_SetSRID(ST_GeomFromGeoJSON(${filterGeometry}), 4326))`)
         }
 
         const todosAwait = await query;
 
-        await this.cacheManager.set(RedisKeys.getTodosKey(limit, offset), todosAwait);
+        if (!filterGeometry)
+            await this.cacheManager.set(RedisKeys.getTodosKey(limit, offset), todosAwait);
 
-        console.log("--" + query.toSQL().sql);
+        // console.log("--" + query.toSQL().sql);
 
         return todosAwait;
     }
@@ -60,7 +64,7 @@ export class TodosService {
     async addTodo(createTodoDto: CreateTodoDto) {
         const { geometryType, coordinates, ...rest } = createTodoDto;
 
-        const geomValue = geometryType === TodoGeometryType.Polygon && coordinates
+        const geomValue = geometryType === TodoGeometryTypeSchema.enum.Polygon && coordinates
             ? sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify({
                 type: 'Polygon',
                 coordinates: coordinates,

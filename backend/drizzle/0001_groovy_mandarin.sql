@@ -1,1 +1,0 @@
-ALTER TABLE "todos" ADD COLUMN IF NOT EXISTS "geom" geometry(Geometry, 4326);

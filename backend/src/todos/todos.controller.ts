@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UsePipes } from '@nestjs/common';
 
 import { TodosService } from './todos.service';
-import { CreateTodoDto, UpdateTodoDto } from './dto/todos.dto'
+import { ZodValidationPipe } from '../common/pipes/zodVlaidation.pipe';
+import { CreateTodoSchema, updateTodoSchema, type CreateTodoDto, type UpdateTodoDto } from '../dto/todosDto.dto';
 
 
 @Controller('todos')
@@ -19,6 +20,7 @@ export class TodosController {
     }
 
     @Post()
+    @UsePipes(new ZodValidationPipe(CreateTodoSchema))
     createTodo(@Body() createTodoDto: CreateTodoDto) {
         return this.todosService.addTodo(createTodoDto);
     }
@@ -29,7 +31,7 @@ export class TodosController {
     }
 
     @Patch(':id')
-    patchTodos(@Param('id') todoId: string, @Body() fields: UpdateTodoDto) {
+    patchTodos(@Param('id') todoId: string, @Body(new ZodValidationPipe(updateTodoSchema)) fields: UpdateTodoDto) {
         return this.todosService.updateTodo(todoId, fields);
     }
 

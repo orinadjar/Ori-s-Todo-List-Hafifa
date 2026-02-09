@@ -1,4 +1,6 @@
-CREATE TYPE "public"."todo_geometry_type" AS ENUM('Point', 'Polygon');--> statement-breakpoint
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+CREATE TYPE "public"."todo_geometry_type" AS ENUM('Point', 'LineString', 'Polygon');--> statement-breakpoint
 CREATE TYPE "public"."todo_subject" AS ENUM('Work', 'Personal', 'Military', 'Urgent', 'General');--> statement-breakpoint
 CREATE TABLE "todos" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

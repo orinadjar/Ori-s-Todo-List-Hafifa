@@ -1,5 +1,5 @@
 {
-  "id": "2eccb6e7-68bb-460d-b78a-c58105674a2d",
+  "id": "48ace377-aa54-4a53-9e31-dd0060bb39b2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -89,6 +89,7 @@
       "schema": "public",
       "values": [
         "Point",
+        "LineString",
         "Polygon"
       ]
     },

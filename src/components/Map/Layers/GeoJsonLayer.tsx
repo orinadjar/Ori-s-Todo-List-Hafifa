@@ -1,71 +1,77 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import { Vector as VectorLayer } from 'ol/layer';
-import { Vector as VectorSource } from 'ol/source';
-import GeoJSON from 'ol/format/GeoJSON';
-import { Style, Icon } from 'ol/style';
+import { Vector as VectorLayer } from "ol/layer";
+import { Vector as VectorSource } from "ol/source";
+import GeoJSON from "ol/format/GeoJSON";
+import { Style, Icon } from "ol/style";
 
-import { useMap } from '../MapContext';
+import { useMap } from "../MapContext";
 
 interface GeoJsonLayerProps {
-  name: string; 
-  data: any; 
+  name: string;
+  data: unknown;
   zIndex: number;
   tooltipField?: string;
 }
 
-const GeoJsonLayer = ({ name, data, zIndex, tooltipField }: GeoJsonLayerProps) => {
-
+const GeoJsonLayer = ({
+  name,
+  data,
+  zIndex,
+  tooltipField,
+}: GeoJsonLayerProps) => {
   const { map } = useMap();
-
-  const sourceRef = useRef(new VectorSource()); // the warehouse of the data, stores the features
-  const layerRef = useRef(new VectorLayer({ // decide how to show the data (colors, opacity ...)
-    source: sourceRef.current,
-    zIndex: zIndex,
-    properties: { name }
-  }));
+  const [layer, setLayer] = useState<VectorLayer<VectorSource> | null>(null);
 
   useEffect(() => {
-    if(!data) return;
-    sourceRef.current.clear();
+    if (!data) return;
 
-    const features = new GeoJSON().readFeatures(data);
-    
-    features.forEach((feature) => {
-      if(tooltipField) {
-        const content = feature.get(tooltipField);
-        feature.set('tooltip', content);
-      }
+    if (typeof data === "object") {
+      const features = new GeoJSON().readFeatures(data);
 
-      console.log(feature);
+      features.forEach((feature) => {
+        if (tooltipField) {
+          const content = feature.get(tooltipField);
+          feature.set("tooltip", content);
+        }
 
-      if(feature.getProperties().icon){
+        if (feature.getProperties().icon) {
+          feature.setStyle(
+            new Style({
+              image: new Icon({
+                src: feature.getProperties().icon,
+                scale: 0.07,
+              }),
+            }),
+          );
+        }
+      });
 
-        feature.setStyle(new Style({
-          image: new Icon({
-            src: feature.getProperties().icon,
-            scale: 0.07
-          })
-        }));
-        
-      }
-    })
+       const newSource = new VectorSource({
+        features: features,
+       });
 
-    sourceRef.current.addFeatures(features);
-  }, [tooltipField, data])
+       const newLayer = new VectorLayer({
+        source: newSource,
+        zIndex: zIndex,
+        properties: { name }
+       });
+
+       setLayer(newLayer);
+    }
+  }, [tooltipField, data, name, zIndex]);
 
   useEffect(() => {
-    if(!map) return;
-    
-    map.addLayer(layerRef.current);
+    if (!map || !layer) return;
+
+    map.addLayer(layer);
 
     return () => {
-      map.removeLayer(layerRef.current);
-    }
-
-  }, [map]);
+      map.removeLayer(layer);
+    };
+  }, [map, layer]);
 
   return null;
-}
+};
 
-export default GeoJsonLayer
+export default GeoJsonLayer;

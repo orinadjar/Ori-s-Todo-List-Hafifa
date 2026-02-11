@@ -3,28 +3,28 @@ import './App.css'
 
 import CssBaseline from '@mui/material/CssBaseline';
 
+import { Outlet } from 'react-router-dom';
+
 import Header from './components/Header';
-import ControlPanel from './components/ControlPanel';
-import TodoList from './components/TodoList';
-import TodoDialog from './components/TodoDialog';
 
 function App() {
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
 
   const openEditDialog = (id: string) => {
-          setEditingTodoId(id);
-          setIsDialogOpen(true);
+    setEditingTodoId(id);
+    setIsDialogOpen(true);
   }
 
   const handleOpenDialog = () => {
-      setEditingTodoId(null);
-      setIsDialogOpen(true);
+    setEditingTodoId(null);
+    setIsDialogOpen(true);
   }
 
   const handleCloseDialog = () => {
-      setIsDialogOpen(false);
-      setEditingTodoId(null);
+    setIsDialogOpen(false);
+    setEditingTodoId(null);
   }
 
   return (
@@ -33,11 +33,7 @@ function App() {
 
       <Header />
       
-      <ControlPanel handleOpenDialog={handleOpenDialog}/>
-
-      <TodoList openEditDialog={openEditDialog}/>
-
-      <TodoDialog handleCloseDialog={handleCloseDialog} isDialogOpen={isDialogOpen} editingTodoId={editingTodoId} />
+      <Outlet context={{ openEditDialog,  handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog}}/>
     </>
   )
 }

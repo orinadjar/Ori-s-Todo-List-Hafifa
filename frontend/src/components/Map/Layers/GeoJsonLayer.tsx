@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import GeoJSON from 'ol/format/GeoJSON';
-import { Style, Icon } from 'ol/style';
+import { Style, Icon, Stroke, Fill } from 'ol/style';
 
 import { mapInstanceAtom } from '../../../atoms/mapAtoms';
 import { useAtomValue } from 'jotai';
@@ -38,17 +38,28 @@ const GeoJsonLayer = ({ name, data, zIndex, tooltipField }: GeoJsonLayerProps) =
         feature.set('tooltip', content);
       }
 
-      console.log(feature);
+      if(feature.getGeometry()?.getType() === 'Polygon'){
+
+        if(feature.getProperties().tooltipContent.isCompleted){
+          feature.setStyle(new Style({
+            stroke: new Stroke({ color: '#2bcd3b', width: 3 }),
+            fill: new Fill({ color: 'rgba(76, 234, 29, 0.2)' }),
+          }));
+        }else {
+          feature.setStyle(new Style({
+              stroke: new Stroke({ color: '#3f51b5', width: 3 }),
+              fill: new Fill({ color: 'rgba(63, 81, 181, 0.2)' }),
+          }));
+        }
+      }
 
       if(feature.getProperties().icon){
-
         feature.setStyle(new Style({
           image: new Icon({
             src: feature.getProperties().icon,
             scale: 0.07
           })
         }));
-        
       }
     })
 

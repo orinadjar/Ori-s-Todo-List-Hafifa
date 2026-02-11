@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 
 import { TodosService } from './todos.service';
 import { CreateTodoDto, UpdateTodoDto } from './dto/todos.dto'
@@ -9,13 +9,13 @@ export class TodosController {
     constructor(private readonly todosService: TodosService) { };
 
     @Get()
-    findAll() {
-        return this.todosService.findAllTodos();
+    findAll(@Query('limit') limit: number, @Query('offset') offset: number) {
+        return this.todosService.findAllTodos(limit, offset);
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.todosService.findOneTodo(id);
+    @Post('/filter')
+    findAllFiltered(@Body('filterGeometry') filterGeometry: string, @Query('limit') limit: number, @Query('offset') offset: number) {
+        return this.todosService.findAllTodos(limit, offset, filterGeometry);
     }
 
     @Post()

@@ -12,7 +12,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import type { TodoSubject } from "../types/types";
-import MapComponent from "./MapComponent";
+import TodoMapComponent from "./TodoMapComponent";
 
 import type { Todo } from "../types/types";
 
@@ -28,12 +28,15 @@ interface Props {
 
 const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
   const { todos, addTodo, updateTodo } = useTodos();
-
+  
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');
   const [priority, setPriority] = useState(2);
-  const [date, setDate] = useState<Dayjs | null>(dayjs('2026-01-01'));
-  const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
+
+  const [geometryType, setGeometryType] = useState<'Point' | 'Polygon'>('Point');
+  const [polygonCoordinates, setPolygonCoordinates] = useState<number[][][] | null>(null);
+  const [pointCoordinates, setPointCoordinates] = useState<[number, number] | null>(null);
 
   const todoToEdit = editingTodoId ? todos.find((t) => t.id === editingTodoId) : null;
 
@@ -41,30 +44,35 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
     setName('');
     setSubject('General');
     setPriority(1);
-    setDate(dayjs('2026-01-01'));
-    setSelectedLocation(null);
+    setDate(dayjs());
+    setPointCoordinates(null);
+    setPolygonCoordinates(null);
     handleCloseDialog();
   }
 
   const handleSubmit = () => {
-    if (name.trim() && date && selectedLocation) {
+    if (name.trim() && date && (pointCoordinates || polygonCoordinates)) {
       const finalDate = new Date(date.format('YYYY-MM-DD'));
 
+      const todoData = {
+        name,
+        subject: subject as TodoSubject,
+        priority,
+        date: finalDate,
+        geometryType,
+        lat: geometryType === 'Point' && pointCoordinates ? pointCoordinates[0] : 0,
+        lng: geometryType === 'Point' && pointCoordinates ? pointCoordinates[1] : 0,
+        coordinates: geometryType === 'Polygon' ? polygonCoordinates : null,
+      }
+
       if (editingTodoId) {
-        updateTodo({ todoId: editingTodoId, fields: { name, subject: subject as TodoSubject, priority, date: finalDate, lat: selectedLocation[0], lng: selectedLocation[1] } });
+        updateTodo({ todoId: editingTodoId, fields: todoData });
       } else {
-        addTodo({
-          name,
-          subject: subject as TodoSubject,
-          priority,
-          date: finalDate,
-          lat: selectedLocation[0],
-          lng: selectedLocation[1],
-        });
+        addTodo(todoData);
       }
       handleCancel();
-    } else if (!selectedLocation) {
-      alert('Most enter a location on the map!');
+    } else {
+      alert(geometryType === 'Point' ? 'Please select a location!' : 'Please draw a polygon!');
     }
   }
 
@@ -74,11 +82,28 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
       setSubject(todoToEdit.subject);
       setPriority(todoToEdit.priority);
       setDate(dayjs(todoToEdit.date));
-      if (todoToEdit.lat !== undefined && todoToEdit.lng !== undefined) {
-        setSelectedLocation([todoToEdit.lat, todoToEdit.lng]);
+      setGeometryType(todoToEdit.geometryType);
+
+      if (todoToEdit.geometryType === 'Polygon' && todoToEdit.lat === 0 && todoToEdit.lng === 0 && todoToEdit.coordinates) {
+        setPolygonCoordinates(todoToEdit.coordinates);
+        setPointCoordinates(null);
+      }
+      else if (todoToEdit.geometryType === 'Point' && todoToEdit.lat !== undefined && todoToEdit.lng !== undefined) {
+        setPointCoordinates([todoToEdit.lat, todoToEdit.lng]);
+        setPolygonCoordinates(null);
       }
     }
   }, [isDialogOpen, todoToEdit]);
+
+  let locationText: string | null = null;
+
+  if (geometryType === 'Point' && pointCoordinates) {
+    locationText = `${pointCoordinates[0].toFixed(2)}, ${pointCoordinates[1].toFixed(2)}`;
+  }
+
+  if (geometryType === 'Polygon' && polygonCoordinates) {
+    locationText = JSON.stringify(polygonCoordinates);
+  }
 
   return (
     <Dialog open={isDialogOpen} onClose={handleCancel} fullWidth maxWidth='xs' PaperProps={{ style: { borderRadius: 12 } }}>
@@ -120,15 +145,33 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
 
         </Stack>
 
-        {selectedLocation && (
+        <TextField select label="Geometry Type" value={geometryType} fullWidth sx={{ mt: 4 }}
+          onChange={(e) => setGeometryType(e.target.value as 'Point' | 'Polygon')}>
+          <MenuItem value='Point'>Point</MenuItem>
+          <MenuItem value='Polygon'>Polygon</MenuItem>
+        </TextField>
+
+        {locationText && (
           <Box sx={{ fontSize: '15px', color: 'gray', mt: 3, fontWeight: 'bold' }}>
-            Location selected: {selectedLocation[0].toFixed(2)}, {selectedLocation[1].toFixed(2)}
+            Location selected: {locationText}
           </Box>
         )}
 
         <Box sx={{ mt: 1, height: '300px', width: '100%', borderRadius: 2 }}>
-          <MapComponent todos={(selectedLocation ? [{ ...todoToEdit, lat: selectedLocation[0], lng: selectedLocation[1] }] : []) as Todo[]}
-            onLocationSelect={(cordinates) => setSelectedLocation(cordinates)} />
+          <TodoMapComponent
+            mode={geometryType}
+            todos={[
+              {
+                ...todoToEdit,
+                geometryType: geometryType,
+                lat: geometryType === 'Point' && pointCoordinates ? pointCoordinates[0] : 0,
+                lng: geometryType === 'Point' && pointCoordinates ? pointCoordinates[1] : 0,
+                coordinates: geometryType === 'Polygon' && todoToEdit?.lat === 0 && todoToEdit.lng === 0 ? todoToEdit?.coordinates : undefined,
+              }
+            ] as Todo[]}
+            onLocationSelect={(cordinates) => setPointCoordinates(cordinates)}
+            onPolygonSelect={(coordinates) => setPolygonCoordinates(coordinates)}
+          />
         </Box>
 
       </DialogContent>

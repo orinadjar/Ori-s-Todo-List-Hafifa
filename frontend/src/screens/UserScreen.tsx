@@ -9,6 +9,7 @@ import MapContainer from '../components/Map/MapContainer.tsx';
 import BaseLayer from '../components/Map/Layers/BaseLayer.tsx';
 import TodosLayer from '../components/Map/Layers/TodosLayer.tsx';
 import StatesLayer from '../components/Map/Layers/StatesLayer.tsx';
+import SearchGeoLayer from '../components/Map/Layers/SearchGeoLayer.tsx';
 
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
@@ -25,7 +26,7 @@ const UserScreen = () => {
     <>
       <Box sx={{ height: '100vh', maxHeight: '100vh', display: 'flex' }}>
 
-        <Box sx={{ flex: 1, mr: 1, border: '1px solid #ddd', borderRadius: '8px', overflowY: 'auto', '&::-webkit-scrollbar': { width: '0px' } }}>
+        <Box sx={{ flex: 1, mr: 1, border: '1px solid #ddd', borderRadius: '8px', overflowY: 'auto', '&::-webkit-scrollbar': { width: '0px' }, height: '95%' }}>
           <ControlPanel handleOpenDialog={handleOpenDialog} />
 
           <TodoList openEditDialog={openEditDialog} />
@@ -38,6 +39,7 @@ const UserScreen = () => {
             <BaseLayer />
             <StatesLayer />
             <TodosLayer />
+            <SearchGeoLayer />
           </MapContainer>
         </Box>
 

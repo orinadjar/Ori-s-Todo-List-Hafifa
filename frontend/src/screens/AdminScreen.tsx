@@ -1,22 +1,24 @@
-import { 
+import { useEffect, useMemo } from "react";
+
+import {
   IconButton,
-  Table, TableBody, TableCell, 
-  TableHead, TableRow , Box,
-  Button,
-  Typography
+  Table, TableBody, TableCell,
+  TableHead, TableRow, Box,
+  Typography,
+  CircularProgress,
+  TableContainer
 } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import Checkbox from '@mui/material/Checkbox';
 import DoneIcon from '@mui/icons-material/Done';
 
-import { 
-  useReactTable, 
-  getCoreRowModel, 
-  flexRender, 
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
   createColumnHelper,
   getSortedRowModel,
-  getPaginationRowModel
 } from "@tanstack/react-table";
 
 import { useOutletContext } from 'react-router-dom';
@@ -27,6 +29,11 @@ import TodoDialog from "../components/TodoDialog";
 import ControlPanel from "../components/ControlPanel";
 import { useTodos } from "../hooks/useTodos";
 
+import { useVirtualization } from '../hooks/useVirtualization'
+
+import { useAtomValue } from "jotai";
+import { debouncedSearchAtom } from "../atoms/todoAtoms";
+
 interface AdminOutletContext {
   openEditDialog: (id: string) => void;
   handleOpenDialog: () => void;
@@ -36,13 +43,16 @@ interface AdminOutletContext {
 }
 
 const AdminScreen = () => {
-  const { todos, deleteTodo, toggleTodo } = useTodos();
-  
+
+  const searchTerm = useAtomValue(debouncedSearchAtom);
+
+  const { todos, deleteTodo, toggleTodo, fetchNextPage, isFetchingNextPage, hasNextPage, isLoading, error, status } = useTodos(searchTerm);
+
   const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
 
   const columnHelper = createColumnHelper<Todo>();
 
-  const columns = [
+  const columns = useMemo(() => [
     columnHelper.accessor('name', {
       header: 'Name',
       enableSorting: false,
@@ -54,7 +64,7 @@ const AdminScreen = () => {
     columnHelper.accessor('priority', {
       header: 'Priority',
     }),
-    columnHelper.accessor('date', { 
+    columnHelper.accessor('date', {
       header: 'Due Date',
       enableSorting: false,
       cell: info => {
@@ -75,12 +85,12 @@ const AdminScreen = () => {
 
         return (
           <Typography variant="body2">
-            {`${lat.toFixed(2)}, ${lng.toFixed(2)}`}
+            {row.original.geometryType === 'Point' ? `${lat.toFixed(2)}, ${lng.toFixed(2)}` : `${row.original.coordinates?.toString().substring(0, 15)}....`}
           </Typography>
         );
       },
     }),
-        columnHelper.display({
+    columnHelper.display({
       id: 'actions',
       header: 'Actions',
       enableSorting: false,
@@ -90,116 +100,102 @@ const AdminScreen = () => {
         return (
           <>
             <IconButton onClick={() => deleteTodo(todo.id)}>
-                <DeleteIcon color='error' />
+              <DeleteIcon color='error' />
             </IconButton>
 
             <IconButton onClick={() => openEditDialog(todo.id)}>
-                <EditIcon color='primary' />
+              <EditIcon color='primary' />
             </IconButton>
 
             <Checkbox
-                checked={todo.isCompleted}
-                onChange={() => toggleTodo(todo.id)} 
-                color='success'
-                icon={<DoneIcon />}
-                checkedIcon={<DoneIcon />} 
+              checked={todo.isCompleted}
+              onChange={() => toggleTodo(todo.id)}
+              color='success'
+              icon={<DoneIcon />}
+              checkedIcon={<DoneIcon />}
             />
           </>
         )
       }
     })
-  ];
+  ], [deleteTodo, toggleTodo, openEditDialog]);
 
   const table = useReactTable({
-    data: todos,
+    data: todos || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    }
+    autoResetPageIndex: false,
   });
+
+  const { parentRef, rowVirtualizer, virtualRows } = useVirtualization(todos.length, hasNextPage, isFetchingNextPage, fetchNextPage, 70)
+
+  if (isLoading) return <CircularProgress />
+
+  if (error) return 'An error has occurred while fetching todos...' + error.message;
 
   return (
     <>
-      <ControlPanel handleOpenDialog={handleOpenDialog}/>
+      {status === 'pending' ? <CircularProgress /> : status === 'error' ? 'An error has occured while fetching the todos' :
+        <>
+          <ControlPanel handleOpenDialog={handleOpenDialog} />
 
-      <Box sx={{ display: 'flex',  justifyContent: 'space-between', width: '100%' }}>
+          <TableContainer ref={parentRef} sx={{ maxHeight: '85vh', overflow: 'auto', position: 'relative' }}>
+            <Table stickyHeader>
 
-          <Button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '10px' }}>
-            Previous page
-          </Button>
+              <TableHead>
 
-          <Typography sx={{ fontWeight: 'bold',justifyContent: 'end' }}>
-            page { table.getState().pagination.pageIndex + 1 } of { table.getPageCount() }
-          </Typography>
+                {table.getHeaderGroups().map(headersGroup => (
 
-          <Button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '10px' }}>
-            Next page
-          </Button>
+                  <TableRow key={headersGroup.id}>
 
-      </Box>
+                    {headersGroup.headers.map(header => (
+                      <TableCell key={header.id}
+                        onClick={header.column.getToggleSortingHandler()}
+                        sx={{
+                          cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none',
+                          '&:hover': header.column.getCanSort() ? { backgroundColor: 'rgba(213, 231, 233, 0.4)' } : undefined
+                        }}>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHead>
 
-      <Table>
-        <TableHead>
+              <TableBody sx={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative', width: '100%' }}>
 
-          {table.getHeaderGroups().map(headersGroup => (
+                {virtualRows.map(virtualRow => (
 
-            <TableRow key={headersGroup.id}>
-              
-              {headersGroup.headers.map(header => (
-                <TableCell key={header.id}
-                  onClick={header.column.getToggleSortingHandler()}
-                  sx={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none',
-                        '&:hover': header.column.getCanSort() ? { backgroundColor: 'rgba(213, 231, 233, 0.4)' } : undefined }}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                  
-                </TableCell>
-              ))} 
+                  <TableRow key={virtualRow.key}
+                    sx={{ position: 'absolute', width: '100%', height: `${virtualRow.size}px`, display: 'flex', transform: `translateY(${virtualRow.start}px)`, background: table.getRowModel().rows[virtualRow.index].original.isCompleted ? '#e8f5e9ff' : '#f8ddddff', 
+                          '&:hover': { backgroundColor: 'rgba(213, 231, 233, 0.4)',  } }}>
 
-            </TableRow>
-          ))}
-      
-        </TableHead>
+                    {table.getRowModel().rows[virtualRow.index].getVisibleCells().map(cell => (
+                      <TableCell key={cell.id} sx={{ minWidth: 0, flex: 1 }}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
 
-        <TableBody>
+                  </TableRow>
 
-          {table.getRowModel().rows.map(row => (
+                ))}
 
-            <TableRow key={row.id}
-              sx={{ backgroundColor: row.original.isCompleted ? '#e8f5e9ff' : '#f8ddddff' }}>
-              
-              {row.getVisibleCells().map(cell => (
-                <TableCell key={cell.id}>
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
-                </TableCell>
-              ))}
+              </TableBody>
 
-            </TableRow>
+            </Table>
 
-          ))}
+          </TableContainer>
 
-        </TableBody>
-
-      </Table>
-
-      <TodoDialog isDialogOpen={isDialogOpen} editingTodoId={editingTodoId} handleCloseDialog={handleCloseDialog}/>
-    
+          <TodoDialog isDialogOpen={isDialogOpen} editingTodoId={editingTodoId} handleCloseDialog={handleCloseDialog} />
+        </>
+      }
     </>
   )
 }

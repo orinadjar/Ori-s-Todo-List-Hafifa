@@ -1,5 +1,5 @@
 {
-  "id": "45eea81e-888a-4069-adfa-7143dfa6a07e",
+  "id": "2eccb6e7-68bb-460d-b78a-c58105674a2d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -47,6 +47,14 @@
           "notNull": true,
           "default": false
         },
+        "geometry_type": {
+          "name": "geometry_type",
+          "type": "todo_geometry_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Point'"
+        },
         "lat": {
           "name": "lat",
           "type": "double precision",
@@ -58,6 +66,12 @@
           "type": "double precision",
           "primaryKey": false,
           "notNull": true
+        },
+        "geom": {
+          "name": "geom",
+          "type": "geometry(Geometry, 4326)",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -70,6 +84,14 @@
     }
   },
   "enums": {
+    "public.todo_geometry_type": {
+      "name": "todo_geometry_type",
+      "schema": "public",
+      "values": [
+        "Point",
+        "Polygon"
+      ]
+    },
     "public.todo_subject": {
       "name": "todo_subject",
       "schema": "public",

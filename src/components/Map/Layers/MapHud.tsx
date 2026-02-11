@@ -29,9 +29,8 @@ const MapHUD = () => {
   }, [map]);
 
   const handleToggle = (layer: Layer) => {
-    const newVisibility = !layer.getVisible();
-    layer.setVisible(newVisibility);
-    setRender(prev => prev + 1);
+    layer.setVisible(!layer.getVisible());
+    setRender((prev) => prev + 1);
   };
 
   return (
@@ -54,7 +53,7 @@ const MapHUD = () => {
               control={
                 <Checkbox
                   size="small"
-                  checked={layer.getVisible()}
+                  checked={layer.getVisible() ?? true}
                   onChange={() => handleToggle(layer)}
                 />
               }

@@ -21,10 +21,30 @@ const GeoJsonLayer = ({
   tooltipField,
 }: GeoJsonLayerProps) => {
   const { map } = useMap();
-  const [layer, setLayer] = useState<VectorLayer<VectorSource> | null>(null);
+
+  const [source, setSource] = useState<VectorSource | null>(null);
+  const [layer, setLayer] = useState<VectorLayer<VectorSource> | null>(null)
 
   useEffect(() => {
-    if (!data) return;
+    const newSource = new VectorSource();
+    const newLayer = new VectorLayer({
+      source: newSource,
+      zIndex: zIndex,
+      properties: { name }
+    })
+
+    setSource(newSource);
+    setLayer(newLayer);
+
+    return () => {
+      if(map) map.removeLayer(newLayer);
+    }
+  }, [map, name, zIndex])
+
+  useEffect(() => {
+    if (!data || !source) return;
+
+    source.clear();
 
     if (typeof data === "object") {
       const features = new GeoJSON().readFeatures(data);
@@ -47,19 +67,9 @@ const GeoJsonLayer = ({
         }
       });
 
-       const newSource = new VectorSource({
-        features: features,
-       });
-
-       const newLayer = new VectorLayer({
-        source: newSource,
-        zIndex: zIndex,
-        properties: { name }
-       });
-
-       setLayer(newLayer);
+      source.addFeatures(features);
     }
-  }, [tooltipField, data, name, zIndex]);
+  }, [tooltipField, data, name, zIndex, source]);
 
   useEffect(() => {
     if (!map || !layer) return;

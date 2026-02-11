@@ -28,6 +28,8 @@ const MapContainer = ({ children }: Props) => {
 
   const [currentTooltip, setCurrentTooltip] = useState<Tooltip | null>(null);
 
+  const lastFeatureRef = useRef<any | null>(null);
+
   useEffect(() => {
     if (!mapElement.current || !popupElement.current) return;
 
@@ -57,6 +59,15 @@ const MapContainer = ({ children }: Props) => {
 
     mapInstance.on("pointermove", (e) => {
       const feature = mapInstance.forEachFeatureAtPixel(e.pixel, (f) => f);
+
+      if (feature === lastFeatureRef.current) {
+        if (feature) {
+          overlay.setPosition(e.coordinate);
+        }
+        return;
+      }
+
+      lastFeatureRef.current = feature;
 
       if (feature) {
         const tooltipContent = feature.get("tooltip");

@@ -1,12 +1,13 @@
-import { useTodos } from "../../../context/todoContext";
 import GeoJsonLayer from "./GeoJsonLayer";
-
 import completedIcon from "../../../assets/green-selector-icon.png";
 import unCompletedIcon from "../../../assets/selector-icon.png";
 import { useMemo } from "react";
 
+import { useAtom } from "jotai";
+import { filteredTodosAtom } from "../../../atoms/todoAtoms";
+
 const TodosLayer = () => {
-  const { filteredTodos } = useTodos();
+  const [filteredTodos] = useAtom(filteredTodosAtom);
 
   const todosGeoJson = useMemo(() => {
     return {

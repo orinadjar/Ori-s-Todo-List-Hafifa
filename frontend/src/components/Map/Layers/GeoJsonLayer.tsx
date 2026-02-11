@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
 import { Style, Icon } from "ol/style";
 
-import { useMap } from "../MapContext";
+import { useAtomValue } from 'jotai';
+import { mapInstanceAtom } from "../../../atoms/mapAtoms";
 
 interface GeoJsonLayerProps {
   name: string;
@@ -20,7 +21,7 @@ const GeoJsonLayer = ({
   zIndex,
   tooltipField,
 }: GeoJsonLayerProps) => {
-  const { map } = useMap();
+  const map = useAtomValue(mapInstanceAtom);
   const [layer, setLayer] = useState<VectorLayer<VectorSource> | null>(null);
 
   useEffect(() => {
@@ -47,17 +48,17 @@ const GeoJsonLayer = ({
         }
       });
 
-       const newSource = new VectorSource({
+      const newSource = new VectorSource({
         features: features,
-       });
+      });
 
-       const newLayer = new VectorLayer({
+      const newLayer = new VectorLayer({
         source: newSource,
         zIndex: zIndex,
         properties: { name }
-       });
+      });
 
-       setLayer(newLayer);
+      setLayer(newLayer);
     }
   }, [tooltipField, data, name, zIndex]);
 

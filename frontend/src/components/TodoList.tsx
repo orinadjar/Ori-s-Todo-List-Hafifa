@@ -1,13 +1,16 @@
 import { Grid, Typography } from "@mui/material"
 
-import { useTodos } from "../context/todoContext"
 import TodoItem from "./TodoItem"
+
+import { useAtom } from "jotai";
+
+import { filteredTodosAtom } from "../atoms/todoAtoms";
 
 interface Props {
   openEditDialog: (id:string) => void;
 }
 const TodoList = ({ openEditDialog }: Props) => {
-  const { filteredTodos } = useTodos();
+  const [ filteredTodos ] = useAtom(filteredTodosAtom);
 
   return (
     <>

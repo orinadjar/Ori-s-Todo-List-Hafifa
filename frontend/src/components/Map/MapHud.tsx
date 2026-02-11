@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { useMap } from "../MapContext";
+import { mapInstanceAtom } from "../../atoms/mapAtoms";
+import { useAtomValue } from "jotai";
 
 import { Layer } from "ol/layer";
 import {
@@ -12,10 +13,11 @@ import {
 } from "@mui/material";
 
 const MapHUD = () => {
-  const { map } = useMap();
-  const [layers, setLayers] = useState<Layer[]>([]);
   const [, setRender] = useState(0);
 
+  const map = useAtomValue(mapInstanceAtom);
+
+  const [layers, setLayers] = useState<Layer[]>([]);
   useEffect(() => {
     if (!map) return;
 
@@ -31,7 +33,7 @@ const MapHUD = () => {
   const handleToggle = (layer: Layer) => {
     const newVisibility = !layer.getVisible();
     layer.setVisible(newVisibility);
-    setRender(prev => prev + 1);
+    setRender((prev) => prev + 1);
   };
 
   return (

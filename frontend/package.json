@@ -21,6 +21,7 @@
     "@mui/x-date-pickers": "^8.23.0",
     "@tanstack/react-table": "^8.21.3",
     "dayjs": "^1.11.19",
+    "jotai": "^2.16.1",
     "ol": "^10.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

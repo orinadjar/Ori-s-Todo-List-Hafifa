@@ -56,7 +56,7 @@ const MapComponent = ({ onLocationSelect, todos = [] }: Props) => {
 
         return () => map.setTarget(undefined);
 
-    }, []);
+    }, [onLocationSelect]);
 
     useEffect(() => {
 

@@ -9,3 +9,11 @@ export interface Todo {
   isCompleted: boolean; 
   location: [number, number];
 }
+
+export interface AdminOutletContext {
+  openEditDialog: (id: string) => void;
+  handleOpenDialog: () => void;
+  isDialogOpen: boolean;
+  editingTodoId: string | null;
+  handleCloseDialog: () => void;
+}

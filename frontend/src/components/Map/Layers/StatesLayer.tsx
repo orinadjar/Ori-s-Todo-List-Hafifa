@@ -1,16 +1,16 @@
-import { useEffect} from "react";
+import { useEffect } from "react";
 
 import GeoJSON from "ol/format/GeoJSON";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 
-import { useMap } from "../MapContext";
+import { mapInstanceAtom } from "../../../atoms/mapAtoms";
+import { useAtomValue } from "jotai";
 
 import statesJson from "../../../../states.json";
 
 const StatesLayer = () => {
-  const { map } = useMap();
-
+  const map = useAtomValue(mapInstanceAtom);
   useEffect(() => {
     if (!map) return;
 
@@ -20,14 +20,14 @@ const StatesLayer = () => {
     });
 
     const newSource = new VectorSource({
-        features: states
+      features: states,
     });
 
     const newLayer = new VectorLayer({
-        source: newSource,
-        zIndex: 1,
-        properties: {name: "States Layer"}
-    })
+      source: newSource,
+      zIndex: 1,
+      properties: { name: "States Layer" },
+    });
 
     map.addLayer(newLayer);
 

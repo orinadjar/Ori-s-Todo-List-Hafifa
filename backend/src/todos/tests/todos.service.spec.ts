@@ -1,231 +1,325 @@
-import { vi, beforeAll, beforeEach, afterAll, afterEach } from "vitest";
-import { Test } from "@nestjs/testing";
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { vi, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
+import { Test } from '@nestjs/testing';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
-import { RedisKeys } from "../../utils/redisKeys.util";
-import { setupTestDb, TestDbHelper } from "./utils/dbSetup";
+import { RedisKeys } from '../../utils/redisKeys.util';
+import { setupTestDb, TestDbHelper } from './utils/dbSetup';
 
-import { TodosService } from "../todos.service";
-import { DATABASE_CONNECTION } from "../../db/db.module";
-import { todos } from "../../db/schema";
-import { CreateTodoDto, UpdateTodoDto } from "../../dto/todosDto.dto";
+import { TodosService } from '../todos.service';
+import { DATABASE_CONNECTION } from '../../db/db.module';
+import { todos } from '../../db/schema';
+import { CreateTodoDto, UpdateTodoDto } from '../../dto/todosDto.dto';
 
 describe('TodoService', () => {
-    let todosService: TodosService;
-    let dbHelper: TestDbHelper;
+  let todosService: TodosService;
+  let dbHelper: TestDbHelper;
 
-    const cacheMock = {
-        get: vi.fn(),
-        set: vi.fn(),
-        clear: vi.fn(),
+  const cacheMock = {
+    get: vi.fn(),
+    set: vi.fn(),
+    clear: vi.fn(),
+  };
+
+  beforeAll(async () => {
+    dbHelper = await setupTestDb();
+  });
+
+  afterAll(async () => {
+    if (dbHelper) {
+      await dbHelper.cleanup();
     }
+  });
 
-    beforeAll(async () => {
-        dbHelper = await setupTestDb();
-    })
+  afterEach(async () => {
+    if (dbHelper) {
+      await dbHelper.db.delete(todos);
+    }
+  });
 
-    afterAll(async () => {
-        if (dbHelper) {
-            await dbHelper.cleanup();
-        }
-    })
+  beforeEach(async () => {
+    cacheMock.get.mockReset();
+    cacheMock.set.mockReset();
+    cacheMock.clear.mockReset();
 
-    afterEach(async () => {
-        if (dbHelper) {
-            await dbHelper.db.delete(todos);
-        }
-    })
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        TodosService,
+        { provide: DATABASE_CONNECTION, useValue: dbHelper.db },
+        { provide: CACHE_MANAGER, useValue: cacheMock },
+      ],
+    }).compile();
 
-    beforeEach(async () => {
-        cacheMock.get.mockReset();
-        cacheMock.set.mockReset();
-        cacheMock.clear.mockReset();
+    todosService = moduleRef.get(TodosService);
+  });
 
-        const moduleRef = await Test.createTestingModule({
-            providers: [
-                TodosService,
-                { provide: DATABASE_CONNECTION, useValue: dbHelper.db },
-                { provide: CACHE_MANAGER, useValue: cacheMock }
-            ]
-        }).compile();
+  it('findAllTodos: should return cached todos and not hit db', async () => {
+    const limit = 15;
+    const offset = 0;
 
-        todosService = moduleRef.get(TodosService);
-    });
+    const cachedTodos = [
+      {
+        id: 'id',
+        name: 'ori',
+        subject: 'work',
+        priority: 5,
+        date: new Date(),
+        geometryType: 'Point',
+        lan: 38.88,
+        lng: 88.88,
+        coordinates: null,
+      },
+    ];
 
-    it('findAllTodos: should return cached todos and not hit db', async () => {
-        const limit = 15;
-        const offset = 0;
+    cacheMock.get.mockResolvedValue(cachedTodos);
 
-        const cachedTodos = [{ id: 'id', name: "ori", subject: "work", priority: 5, date: new Date(), geometryType: "Point", lan: 38.88, lng: 88.88, coordinates: null }]
+    const result = await todosService.findAllTodos(limit, offset);
 
-        cacheMock.get.mockResolvedValue(cachedTodos);
+    expect(result).toEqual(cachedTodos);
 
-        const result = await todosService.findAllTodos(limit, offset);
+    expect(cacheMock.get).toHaveBeenCalledWith(
+      RedisKeys.getTodosKey(limit, offset),
+    );
 
-        expect(result).toEqual(cachedTodos);
+    expect(cacheMock.set).not.toHaveBeenCalled();
+  });
 
-        expect(cacheMock.get).toHaveBeenCalledWith(RedisKeys.getTodosKey(limit, offset));
+  it('findAllTodos: should hit db and set the cache todos', async () => {
+    const limit = 15;
+    const offset = 0;
 
-        expect(cacheMock.set).not.toHaveBeenCalled();
-    });
+    const todoData = {
+      name: 'Test Todo',
+      subject: 'Work' as const,
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Point' as const,
+      lat: 38.88,
+      lng: 88.88,
+      isCompleted: false,
+    };
 
-    it('findAllTodos: should hit db and set the cache todos', async () => {
-        const limit = 15;
-        const offset = 0;
+    cacheMock.get.mockResolvedValue(null);
 
-        const todoData = {
-            name: "Test Todo",
-            subject: "Work" as const,
-            priority: 5,
-            date: new Date(),
-            geometryType: "Point" as const,
-            lat: 38.88,
-            lng: 88.88,
-            isCompleted: false
-        };
+    const [insertedTodo] = await dbHelper.db
+      .insert(todos)
+      .values(todoData)
+      .returning();
 
-        cacheMock.get.mockResolvedValue(null);
+    const result = await todosService.findAllTodos(limit, offset);
 
-        const [insertedTodo] = await dbHelper.db.insert(todos).values(todoData).returning();
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toEqual(insertedTodo.id);
+    expect(result[0].name).toEqual(insertedTodo.name);
 
-        const result = await todosService.findAllTodos(limit, offset);
+    expect(cacheMock.set).toHaveBeenCalledWith(
+      RedisKeys.getTodosKey(limit, offset),
+      result,
+    );
+  });
 
-        expect(result).toHaveLength(1);
-        expect(result[0].id).toEqual(insertedTodo.id);
-        expect(result[0].name).toEqual(insertedTodo.name);
+  it('findAllTodos: should hit db and preforme where with filterGeometry', async () => {
+    const limit = 15;
+    const offset = 0;
+    const filterGeometry =
+      '{"type":"Polygon","coordinates":[[[34.7,32.0],[34.9,32.0],[34.9,32.2],[34.7,32.2],[34.7,32.0]]]}';
 
-        expect(cacheMock.set).toHaveBeenCalledWith(RedisKeys.getTodosKey(limit, offset), result);
-    });
+    const todoData: CreateTodoDto = {
+      name: 'Test Todo',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [34.75, 32.05],
+          [34.85, 32.05],
+          [34.85, 32.15],
+          [34.75, 32.15],
+          [34.75, 32.05],
+        ],
+      ],
+    };
 
-    it("findAllTodos: should hit db and preforme where with filterGeometry", async () => {
-        const limit = 15;
-        const offset = 0;
-        const filterGeometry = "{\"type\":\"Polygon\",\"coordinates\":[[[34.7,32.0],[34.9,32.0],[34.9,32.2],[34.7,32.2],[34.7,32.0]]]}"
+    cacheMock.get.mockResolvedValue(null);
 
-        const todoData: CreateTodoDto = {
-            name: "Test Todo",
-            subject: "Work",
-            priority: 5,
-            date: new Date(),
-            geometryType: "Polygon",
-            lat: 0,
-            lng: 0,
-            coordinates: [[[34.75, 32.05], [34.85, 32.05], [34.85, 32.15], [34.75, 32.15], [34.75, 32.05]]],
-        };
+    const insertedTodo = await todosService.addTodo(todoData);
 
-        cacheMock.get.mockResolvedValue(null);
+    const result = await todosService.findAllTodos(
+      limit,
+      offset,
+      filterGeometry,
+    );
 
-        const insertedTodo = await todosService.addTodo(todoData);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toEqual(insertedTodo.id);
+    expect(result[0].name).toEqual(insertedTodo.name);
+    expect(result[0].lat).not.toEqual('0');
+    expect(result[0].lng).not.toEqual('0');
 
-        const result = await todosService.findAllTodos(limit, offset, filterGeometry);
+    expect(cacheMock.set).not.toHaveBeenCalled();
+  });
 
-        expect(result).toHaveLength(1);
-        expect(result[0].id).toEqual(insertedTodo.id);
-        expect(result[0].name).toEqual(insertedTodo.name);
-        expect(result[0].lat).not.toEqual("0");
-        expect(result[0].lng).not.toEqual("0");
+  it('addTodo: should return the new todo and clear cache', async () => {
+    const fakeTodo: CreateTodoDto = {
+      name: 'mockTodo',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [8, 9],
+          [9, 9],
+          [33, 8],
+          [89, 32],
+          [98, 11],
+        ],
+      ],
+    };
 
-        expect(cacheMock.set).not.toHaveBeenCalled();
-    });
+    const fakecache = {
+      id: '1',
+      name: 'mockTodo2',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [8, 9],
+          [9, 9],
+          [33, 8],
+          [89, 32],
+          [98, 11],
+        ],
+      ],
+    };
 
-    it('addTodo: should return the new todo and clear cache', async () => {
-        const fakeTodo: CreateTodoDto = {
-            name: 'mockTodo',
-            subject: "Work",
-            priority: 5,
-            date: new Date(),
-            geometryType: "Polygon",
-            lat: 0,
-            lng: 0,
-            coordinates: [[[8, 9], [9, 9], [33, 8], [89, 32], [98, 11]]],
-        }
+    cacheMock.get.mockResolvedValue(fakecache);
 
-        const fakecache = { id: '1', name: 'mockTodo2', subject: 'Work', priority: 5, date: new Date(), geometryType: 'Polygon', lat: 0, lng: 0, coordinates: [[[8, 9], [9, 9], [33, 8], [89, 32], [98, 11]]] }
+    const result = await todosService.addTodo(fakeTodo);
 
-        cacheMock.get.mockResolvedValue(fakecache);
+    expect(result.name).toEqual(fakeTodo.name);
+    expect(result.id).not.toEqual(null);
+    expect(cacheMock.clear).toHaveBeenCalled();
+  });
 
-        const result = await todosService.addTodo(fakeTodo);
+  it('deleteTodo: should delete the Todo and clear the cache', async () => {
+    const limit = 15;
+    const offset = 0;
 
-        expect(result.name).toEqual(fakeTodo.name);
-        expect(result.id).not.toEqual(null);
-        expect(cacheMock.clear).toHaveBeenCalled();
-    })
+    const todoData: CreateTodoDto = {
+      name: 'Test Todo',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [34.75, 32.05],
+          [34.85, 32.05],
+          [34.85, 32.15],
+          [34.75, 32.15],
+          [34.75, 32.05],
+        ],
+      ],
+    };
 
-    it('deleteTodo: should delete the Todo and clear the cache', async () => {
-        const limit = 15;
-        const offset = 0;
+    const insertedTodo = await todosService.addTodo(todoData);
 
-        const todoData: CreateTodoDto = {
-            name: "Test Todo",
-            subject: "Work",
-            priority: 5,
-            date: new Date(),
-            geometryType: "Polygon",
-            lat: 0,
-            lng: 0,
-            coordinates: [[[34.75, 32.05], [34.85, 32.05], [34.85, 32.15], [34.75, 32.15], [34.75, 32.05]]],
-        };
+    await todosService.deleteTodo(insertedTodo.id);
 
-        const insertedTodo = await todosService.addTodo(todoData);
+    const result = await todosService.findAllTodos(limit, offset);
 
-        await todosService.deleteTodo(insertedTodo.id);
+    expect(result).toHaveLength(0);
+    expect(cacheMock.clear).toHaveBeenCalled();
+  });
 
-        const result = await todosService.findAllTodos(limit, offset);
+  it('updateTodo: should update the Todo and clear cache', async () => {
+    const todoData: CreateTodoDto = {
+      name: 'Test Todo',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [34.75, 32.05],
+          [34.85, 32.05],
+          [34.85, 32.15],
+          [34.75, 32.15],
+          [34.75, 32.05],
+        ],
+      ],
+    };
 
-        expect(result).toHaveLength(0);
-        expect(cacheMock.clear).toHaveBeenCalled();
-    })
+    const updateTodoData: UpdateTodoDto = {
+      name: 'Updated Todo',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [34.75, 32.05],
+          [34.85, 32.05],
+          [34.85, 32.15],
+          [34.75, 32.15],
+          [34.75, 32.05],
+        ],
+      ],
+    };
 
-    it('updateTodo: should update the Todo and clear cache', async () => {
-        const todoData: CreateTodoDto = {
-            name: "Test Todo",
-            subject: "Work",
-            priority: 5,
-            date: new Date(),
-            geometryType: "Polygon",
-            lat: 0,
-            lng: 0,
-            coordinates: [[[34.75, 32.05], [34.85, 32.05], [34.85, 32.15], [34.75, 32.15], [34.75, 32.05]]],
-        };
+    const insertedTodo = await todosService.addTodo(todoData);
 
-        const updateTodoData: UpdateTodoDto = {
-            name: "Updated Todo",
-            subject: "Work",
-            priority: 5,
-            date: new Date(),
-            geometryType: "Polygon",
-            lat: 0,
-            lng: 0,
-            coordinates: [[[34.75, 32.05], [34.85, 32.05], [34.85, 32.15], [34.75, 32.15], [34.75, 32.05]]],
-        };
+    const updateTodo = await todosService.updateTodo(
+      insertedTodo.id,
+      updateTodoData,
+    );
 
-        const insertedTodo = await todosService.addTodo(todoData);
+    expect(updateTodo.name).toEqual('Updated Todo');
+    expect(updateTodo.id).toEqual(insertedTodo.id);
+    expect(cacheMock.clear).toHaveBeenCalled();
+  });
 
-        const updateTodo = await todosService.updateTodo(insertedTodo.id, updateTodoData);
+  it('toggleTodo: should toggle the todo and clear the cache', async () => {
+    const todoData: CreateTodoDto = {
+      name: 'Test Todo',
+      subject: 'Work',
+      priority: 5,
+      date: new Date(),
+      geometryType: 'Polygon',
+      lat: 0,
+      lng: 0,
+      coordinates: [
+        [
+          [34.75, 32.05],
+          [34.85, 32.05],
+          [34.85, 32.15],
+          [34.75, 32.15],
+          [34.75, 32.05],
+        ],
+      ],
+    };
 
-        expect(updateTodo.name).toEqual("Updated Todo");
-        expect(updateTodo.id).toEqual(insertedTodo.id);
-        expect(cacheMock.clear).toHaveBeenCalled();
-    });
+    const insertedTodo = await todosService.addTodo(todoData);
 
-    it('toggleTodo: should toggle the todo and clear the cache', async () => {
-        const todoData: CreateTodoDto = {
-            name: "Test Todo",
-            subject: "Work",
-            priority: 5,
-            date: new Date(),
-            geometryType: "Polygon",
-            lat: 0,
-            lng: 0,
-            coordinates: [[[34.75, 32.05], [34.85, 32.05], [34.85, 32.15], [34.75, 32.15], [34.75, 32.05]]],
-        };
+    const toggleTodo = await todosService.toggleTodo(insertedTodo.id);
 
-        const insertedTodo = await todosService.addTodo(todoData);
-
-        const toggleTodo = await todosService.toggleTodo(insertedTodo.id);
-
-        expect(toggleTodo.isCompleted).toEqual(true);
-        expect(toggleTodo.id).toEqual(insertedTodo.id);
-        expect(cacheMock.clear).toHaveBeenCalled();
-    });
-})
+    expect(toggleTodo.isCompleted).toEqual(true);
+    expect(toggleTodo.id).toEqual(insertedTodo.id);
+    expect(cacheMock.clear).toHaveBeenCalled();
+  });
+});

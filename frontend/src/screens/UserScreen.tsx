@@ -9,14 +9,7 @@ import MapContainer from '../components/Map/MapContainer.tsx';
 import BaseLayer from '../components/Map/Layers/BaseLayer.tsx';
 import TodosLayer from '../components/Map/Layers/TodosLayer.tsx';
 import StatesLayer from '../components/Map/Layers/StatesLayer.tsx';
-
-interface AdminOutletContext {
-  openEditDialog: (id: string) => void;
-  handleOpenDialog: () => void;
-  isDialogOpen: boolean;
-  editingTodoId: string | null;
-  handleCloseDialog: () => void;
-}
+import type { AdminOutletContext } from '../types/types.ts';
 
 const UserScreen = () => {
   const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();

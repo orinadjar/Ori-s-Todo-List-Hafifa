@@ -1,68 +1,72 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 import { mapInstanceAtom } from "../../atoms/mapAtoms";
 import { useAtomValue } from "jotai";
 
-import { Layer } from 'ol/layer';
-import { Checkbox, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
+import { Layer } from "ol/layer";
+import {
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Paper,
+  Typography,
+} from "@mui/material";
 
-const MapHud = () => {
+const MapHUD = () => {
+  const [, setRender] = useState(0);
 
-    const map = useAtomValue(mapInstanceAtom);
-    
-    const [layers, setLayers] = useState<Layer[]>([]);
-    const [visibleLayers, setVisibleLayers] = useState<{ [key: string]: boolean }>({});
+  const map = useAtomValue(mapInstanceAtom);
 
-    useEffect(() => {
-        if (!map) return;
+  const [layers, setLayers] = useState<Layer[]>([]);
+  useEffect(() => {
+    if (!map) return;
 
-        const updateLayers = () => {
-            const allLayers = map.getAllLayers();
-            setLayers([...allLayers]);
+    const updateLayers = () => {
+      const allLayers = map.getAllLayers();
+      setLayers([...allLayers]);
+    };
 
-            const layersVisibleInfo: { 
-                [key: string]: boolean
-            } = {};
+    updateLayers();
+    map.getLayers().on("change:length", updateLayers);
+  }, [map]);
 
-            allLayers.forEach(layer => {
-                const name = layer.get('name');
-                if (name) 
-                    layersVisibleInfo[name] = layer.getVisible();
-            })
+  const handleToggle = (layer: Layer) => {
+    const newVisibility = !layer.getVisible();
+    layer.setVisible(newVisibility);
+    setRender((prev) => prev + 1);
+  };
 
-            setVisibleLayers(layersVisibleInfo);
-        }
+  return (
+    <Paper
+      sx={{
+        position: "absolute",
+        minWidth: 150,
+        borderRadius: 2,
+        zIndex: 1000,
+      }}
+    >
+      <FormGroup>
+        {layers.map((layer, index) => {
+          const name = layer.get("name");
+          if (!name) return null;
 
-        updateLayers();
-        map.getLayers().on('change:length', updateLayers);        
+          return (
+            <FormControlLabel
+              key={index}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={layer.getVisible()}
+                  onChange={() => handleToggle(layer)}
+                />
+              }
+              label={<Typography>{name}</Typography>}
+            />
+          );
+        })}
+      </FormGroup>
+    </Paper>
+  );
+};
 
-    }, [map]);
-
-    const handleToggle = (layer: Layer) => {
-        const name = layer.get('name');
-        const nextVisible = !layer.getVisible();
-        layer.setVisible(nextVisible);
-        setVisibleLayers(prev => ({ ...prev, [name]: nextVisible }));
-    }
-
-
-    return (
-        <Paper sx={{ position: "absolute",minWidth: 150, borderRadius: 2, zIndex: 1000 }}>
-            <FormGroup>
-                {layers.map((layer, index) => {
-                    const name = layer.get('name');
-                    if(!name) return null;
-
-                    return (
-                        <FormControlLabel key={index} control={
-                            <Checkbox size='small' checked={visibleLayers[name] ?? true} onChange={() => handleToggle(layer)} />
-                        } label={<Typography>{name}</Typography>} />
-                       
-                    )
-                })}
-            </FormGroup>
-        </Paper>
-    )
-}
-
-export default MapHud
+export default MapHUD;

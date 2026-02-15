@@ -120,7 +120,7 @@ export class TodosService {
   async updateTodo(id: string, updateTodoDto: UpdateTodoDto) {
     const { geometryType, ...rest } = updateTodoDto;
 
-    const updateData: any = { ...rest };
+    const updateData = { ...rest };
 
     if (geometryType) {
       if (geometryType === 'Polygon' && updateTodoDto.coordinates) {

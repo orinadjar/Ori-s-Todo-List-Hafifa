@@ -1,46 +1,46 @@
-import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
 
-import { Client } from "pg";
-import * as schema from "../../../db/schema";
-
-const DB_CONFIG = {
-    user: "orinadjar",
-    password: "W23w23w23",
-    host: "localhost",
-    port: 5432,
-};
+import { Client } from 'pg';
+import * as schema from '../../../db/schema';
 
 export interface TestDbHelper {
-    db: NodePgDatabase<typeof schema>;
-    cleanup: () => Promise<void>;
+  db: NodePgDatabase<typeof schema>;
+  cleanup: () => Promise<void>;
 }
 
 export const setupTestDb = async (): Promise<TestDbHelper> => {
-    const dbName = `testDb_${Math.floor(Math.random() * 10000)}`;
+  const DB_CONFIG = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+  };
 
-    const mainClient = new Client({ ...DB_CONFIG, database: 'postgres' });
-    await mainClient.connect();
-    await mainClient.query(`CREATE DATABASE "${dbName}"`);
-    await mainClient.end();
+  const dbName = `testDb_${Math.floor(Math.random() * 10000)}`;
 
-    const testClient = new Client({ ...DB_CONFIG, database: dbName });
-    await testClient.connect();
+  const mainClient = new Client({ ...DB_CONFIG, database: 'postgres' });
+  await mainClient.connect();
+  await mainClient.query(`CREATE DATABASE "${dbName}"`);
+  await mainClient.end();
 
-    const db = drizzle(testClient, { schema });
-    
-    await db.execute('CREATE EXTENSION IF NOT EXISTS postgis');
+  const testClient = new Client({ ...DB_CONFIG, database: dbName });
+  await testClient.connect();
 
-    await migrate(db, { migrationsFolder: './drizzle' });
+  const db = drizzle(testClient, { schema });
 
-    const cleanup = async () => {
-        await testClient.end();
+  await db.execute('CREATE EXTENSION IF NOT EXISTS postgis');
 
-        const cleanupClient = new Client({ ...DB_CONFIG, database: 'postgres' });
-        await cleanupClient.connect();
-        await cleanupClient.query(`DROP DATABASE "${dbName}"`);
-        await cleanupClient.end();
-    }
+  await migrate(db, { migrationsFolder: './drizzle' });
 
-    return { db, cleanup };
-}
+  const cleanup = async () => {
+    await testClient.end();
+
+    const cleanupClient = new Client({ ...DB_CONFIG, database: 'postgres' });
+    await cleanupClient.connect();
+    await cleanupClient.query(`DROP DATABASE "${dbName}"`);
+    await cleanupClient.end();
+  };
+
+  return { db, cleanup };
+};

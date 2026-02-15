@@ -5,33 +5,64 @@ export const TodoSubjectSchema = z.enum([
   'Personal',
   'Military',
   'Urgent',
-  'General'
+  'General',
 ]);
 
 export const TodoGeometryTypeSchema = z.enum(['Point', 'Polygon']);
 
-export const TodoSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1, 'Name cannot be empty'),
-  subject: TodoSubjectSchema,
-  priority: z.number().int().min(1).max(10),
-  date: z.coerce.date(),
-  isCompleted: z.boolean().default(false),
-  geometryType: TodoGeometryTypeSchema,
-  lat: z.number(),
-  lng: z.number(),
-  coordinates: z.array(z.array(z.array(z.number()))).nullable().optional(),
-});
+export const coordinatesSchema = z.array(z.array(z.array(z.number())));
 
-export const CreateTodoSchema = TodoSchema.omit({
-  id: true,
-  isCompleted: true
-}).strict();
+export const FilterGeometrySchema = z
+  .string()
+  .transform((val) => JSON.parse(val))
+  .pipe(
+    z.object({
+      type: z.enum(['Point', 'Polygon']),
+      coordinates: coordinatesSchema,
+    }),
+  );
 
-export const updateTodoSchema = CreateTodoSchema.partial();
+const TodoGeometrySchema = z.discriminatedUnion('geometryType', [
+  z.object({
+    geometryType: z.literal('Point'),
+    lat: z.number(),
+    lng: z.number(),
+  }),
+
+  z.object({
+    geometryType: z.literal('Polygon'),
+    coordinates: coordinatesSchema.nullable().optional(),
+  }),
+]);
+
+const TodoFieldsSchema = z
+  .object({
+    name: z.string().min(1, 'Name cannot be empty'),
+    subject: TodoSubjectSchema,
+    priority: z.number().int().min(1).max(10),
+    date: z.coerce.date(),
+  })
+  .strict();
+
+export const CreateTodoSchema = TodoFieldsSchema.and(TodoGeometrySchema);
+
+export const TodoSchema = CreateTodoSchema.and(
+  z.object({
+    id: z.uuid(),
+    isCompleted: z.boolean().default(false),
+  }),
+);
+
+export const updateTodoSchema = TodoFieldsSchema.partial().and(
+  TodoGeometrySchema.optional(),
+);
+
+export const PaginationQuerySchema = z.coerce.number().int().nonnegative();
 
 export type Todo = z.infer<typeof TodoSchema>;
 export type CreateTodoDto = z.infer<typeof CreateTodoSchema>;
 export type UpdateTodoDto = z.infer<typeof updateTodoSchema>;
 export type TodoSubject = z.infer<typeof TodoSubjectSchema>;
 export type TodoGeometryType = z.infer<typeof TodoGeometryTypeSchema>;
+export type FilterGeometryDto = z.infer<typeof FilterGeometrySchema>;
+export type coordinatesSchemaDto = z.infer<typeof coordinatesSchema>;

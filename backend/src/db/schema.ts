@@ -1,28 +1,49 @@
 import { pgTable, pgEnum, customType } from 'drizzle-orm/pg-core';
-import * as t from 'drizzle-orm/pg-core'
+import * as t from 'drizzle-orm/pg-core';
 
-export const todoSubjectEnum = pgEnum('todo_subject', ['Work', 'Personal', 'Military', 'Urgent', 'General']);
-export const todoGeometryTypeEnum = pgEnum('todo_geometry_type', ['Point', 'Polygon']);
+export const todoSubjectEnum = pgEnum('todo_subject', [
+  'Work',
+  'Personal',
+  'Military',
+  'Urgent',
+  'General',
+]);
 
-const geometry = customType<{ data: unknown }>({
-    dataType() {
-      return 'geometry(Geometry, 4326)';
-    },
-  });
+export const todoGeometryTypeEnum = pgEnum('todo_geometry_type', [
+  'Point',
+  'Polygon',
+]);
 
-export const todos = pgTable(
-    'todos',
-    {
-        id: t.uuid('id').primaryKey().defaultRandom(),
-        name: t.text('name').notNull(),
-        subject: todoSubjectEnum('subject').notNull(),
-        priority: t.integer('priority').notNull(),
-        date: t.timestamp('date').notNull(),
-        isCompleted: t.boolean('is_completed').default(false).notNull(),
-        geometryType: todoGeometryTypeEnum('geometry_type').default('Point').notNull(),
-        lat: t.doublePrecision('lat').notNull(),
-        lng: t.doublePrecision('lng').notNull(),
-        geom: geometry('geom'),
+export type GeometryInput =
+  | { type: 'Point'; lat: number; lng: number }
+  | { type: 'Polygon'; coordinates: number[][][] };
+
+const geometry = customType<{ data: GeometryInput }>({
+  dataType() {
+    return 'geometry(Geometry, 4326)';
+  },
+  toDriver(value: GeometryInput): string {
+    if (value.type === 'Point') {
+      return `SRID=4326; POINT(${value.lng} ${value.lat})`;
     }
-);
+    const rings = value.coordinates
+      .map((ring) => '(' + ring.map(([x, y]) => `${x} ${y}`).join(', ') + ')')
+      .join(', ');
+    return `SRID=4326; POLYGON(${rings})`;
+  },
+});
 
+export const todos = pgTable('todos', {
+  id: t.uuid('id').primaryKey().defaultRandom(),
+  name: t.text('name').notNull(),
+  subject: todoSubjectEnum('subject').notNull(),
+  priority: t.integer('priority').notNull(),
+  date: t.timestamp('date').notNull(),
+  isCompleted: t.boolean('is_completed').default(false).notNull(),
+  geometryType: todoGeometryTypeEnum('geometry_type')
+    .default('Point')
+    .notNull(),
+  lat: t.doublePrecision('lat').notNull(),
+  lng: t.doublePrecision('lng').notNull(),
+  geom: geometry('geom'),
+});

@@ -37,9 +37,7 @@ describe('TodoService', () => {
   });
 
   beforeEach(async () => {
-    cacheMock.get.mockReset();
-    cacheMock.set.mockReset();
-    cacheMock.clear.mockReset();
+    vi.clearAllMocks();
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -120,8 +118,18 @@ describe('TodoService', () => {
   it('findAllTodos: should hit db and preforme where with filterGeometry', async () => {
     const limit = 15;
     const offset = 0;
-    const filterGeometry =
-      '{"type":"Polygon","coordinates":[[[34.7,32.0],[34.9,32.0],[34.9,32.2],[34.7,32.2],[34.7,32.0]]]}';
+    const filterGeometry = {
+      type: 'Polygon' as const,
+      coordinates: [
+        [
+          [77.7, 77.7],
+          [77.7, 77.7],
+          [77.7, 77.7],
+          [77.7, 77.7],
+          [77.7, 77.7],
+        ],
+      ],
+    };
 
     const todoData: CreateTodoDto = {
       name: 'Test Todo',
@@ -133,11 +141,11 @@ describe('TodoService', () => {
       lng: 0,
       coordinates: [
         [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+          [77.7, 77.7],
+          [77.7, 77.7],
+          [77.7, 77.7],
+          [77.7, 77.7],
+          [77.7, 77.7],
         ],
       ],
     };

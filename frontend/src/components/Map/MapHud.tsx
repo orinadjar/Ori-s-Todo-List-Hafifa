@@ -2,16 +2,17 @@ import { useEffect, useState } from "react"
 
 import { Button, Checkbox, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
 
-import { isSearchGeometryAtom, mapInstanceAtom } from "../../atoms/mapAtoms";
-import { useAtom, useAtomValue } from "jotai";
+import { isSearchGeometryAtom} from "../../atoms/mapAtoms";
+import { useAtom } from "jotai";
 
 import { Layer } from 'ol/layer';
 
 import CoordsPanel from "../CoordsPanel";
+import { useMap } from "./MapContext";
 
 const MapHud = () => {
 
-    const map = useAtomValue(mapInstanceAtom);
+    const { map } = useMap();
     const [isSearchGeometry, setIsSearchGeometry] = useAtom(isSearchGeometryAtom);
 
     const [layers, setLayers] = useState<Layer[]>([]);

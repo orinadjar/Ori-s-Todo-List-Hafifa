@@ -11,19 +11,18 @@ export const DATABASE_CONNECTION = 'database_connection';
 
 @Global()
 @Module({
-    providers: [
-        { 
-            provide: DATABASE_CONNECTION,
-            useFactory: (configService: ConfigService) => {
-                const pool = new Pool({
-                    connectionString: configService.getOrThrow('DATABASE_URL'),
-                })
-                return drizzle(pool, { schema });
-            },
-            inject: [ConfigService],
-        },
-    ],
-    exports: [DATABASE_CONNECTION],
+  providers: [
+    {
+      provide: DATABASE_CONNECTION,
+      useFactory: (configService: ConfigService) => {
+        const pool = new Pool({
+          connectionString: configService.getOrThrow('DATABASE_URL'),
+        });
+        return drizzle(pool, { schema });
+      },
+      inject: [ConfigService],
+    },
+  ],
+  exports: [DATABASE_CONNECTION],
 })
-
-export class DbModule {};
+export class DbModule {}

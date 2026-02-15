@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Paper, Typography } from '@mui/material'
 
-import { useAtomValue } from 'jotai';
-import { mapInstanceAtom } from '../atoms/mapAtoms';
-
 import { toLonLat } from 'ol/proj';
+import { useMap } from './Map/MapContext';
 
 const CoordsPanel = () => {
 
-    const map = useAtomValue(mapInstanceAtom);
+    const { map } = useMap();
     const [coords, setCoords] = useState([0,0]);
     const throtttleTiomeout = useRef<number | null>(null)
 

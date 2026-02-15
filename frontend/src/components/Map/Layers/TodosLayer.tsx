@@ -12,9 +12,7 @@ const TodosLayer = () => {
     const searchTerm = useAtomValue(debouncedSearchAtom);
 
     const { todos } = useTodos(searchTerm);
-
-    todos.map((todo) => console.log(todo));
-
+    
     const todosGeoJson = {
         type: 'FeatureCollection',
         features: todos.map(todo => ({

@@ -4,14 +4,12 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 
-import { mapInstanceAtom } from "../../../atoms/mapAtoms";
-import { useAtomValue } from "jotai";
-
 import statesJson from '../../../../states.json';
+import { useMap } from "../MapContext";
 
 const StatesLayer = () => {
 
-    const map = useAtomValue(mapInstanceAtom);
+    const { map } = useMap();
 
     const sourceRef = useRef(new VectorSource());
     const layerRef = useRef(new VectorLayer({

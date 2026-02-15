@@ -2,21 +2,20 @@ import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-q
 
 import type { Todo } from '../types/types';
 import { useAtomValue } from 'jotai';
-import { isSearchGeometryAtom, searchGeoJsonAtom } from '../atoms/mapAtoms';
+import { searchGeoJsonAtom } from '../atoms/mapAtoms';
 
 const TODO_URL = `${import.meta.env.VITE_API_URL}/todos`;
 
 export const useTodos = (searchTerm?: string) => {
     const queryClient = useQueryClient();
     const searchGeoJson = useAtomValue(searchGeoJsonAtom);
-    const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
 
     // GET: GetAllTodos
     const { data, isLoading, error, status, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<Todo[]>({
-        queryKey: ['todos', searchGeoJson, isSearchGeometry],
+        queryKey: ['todos', searchGeoJson],
         queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
 
-            let url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
+            const url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
             url.searchParams.append('limit', '15');
             url.searchParams.append('offset', pageParam.toString());
 

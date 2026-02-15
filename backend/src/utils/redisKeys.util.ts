@@ -1,3 +1,3 @@
 export const RedisKeys = {
-    getTodosKey: (limit: number, offset: number) => `${limit}:${offset}`
-}
+  getTodosKey: (limit: number, offset: number) => `${limit}:${offset}`,
+};

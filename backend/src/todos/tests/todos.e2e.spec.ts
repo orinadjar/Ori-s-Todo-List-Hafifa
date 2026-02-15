@@ -1,170 +1,181 @@
-import { vi, beforeAll, beforeEach, afterAll, afterEach } from "vitest";
+import { vi, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
-import request from "supertest";
+import request from 'supertest';
 
 import { setupTestDb, TestDbHelper } from './utils/dbSetup';
-import { todos } from "../../db/schema";
-import { AppModule } from "../../app.module";
-import { DATABASE_CONNECTION } from "../../db/db.module";
-import { CreateTodoDto, UpdateTodoDto } from "src/dto/todosDto.dto";
+import { todos } from '../../db/schema';
+import { AppModule } from '../../app.module';
+import { DATABASE_CONNECTION } from '../../db/db.module';
+import { CreateTodoDto, UpdateTodoDto } from 'src/dto/todosDto.dto';
 
 describe('TodosController e2e', () => {
-    let app: INestApplication;
-    let dbHelper: TestDbHelper;
+  let app: INestApplication;
+  let dbHelper: TestDbHelper;
 
-    const cacheMock = {
-        set: vi.fn(),
-        get: vi.fn(),
-        clear: vi.fn(),
+  const cacheMock = {
+    set: vi.fn(),
+    get: vi.fn(),
+    clear: vi.fn(),
+  };
+
+  beforeAll(async () => {
+    dbHelper = await setupTestDb();
+  });
+
+  afterAll(async () => {
+    if (dbHelper) {
+      await dbHelper.cleanup();
     }
+  });
 
-    beforeAll(async () => {
-        dbHelper = await setupTestDb();
-    });
+  beforeEach(async () => {
+    cacheMock.set.mockReset();
+    cacheMock.get.mockReset();
+    cacheMock.clear.mockReset();
 
-    afterAll(async () => {
-        if (dbHelper) {
-            await dbHelper.cleanup();
-        }
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     })
+      .overrideProvider(DATABASE_CONNECTION)
+      .useValue(dbHelper.db)
+      .overrideProvider(CACHE_MANAGER)
+      .useValue(cacheMock)
+      .compile();
 
-    beforeEach(async () => {
-        cacheMock.set.mockReset();
-        cacheMock.get.mockReset();
-        cacheMock.clear.mockReset();
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
 
-        const moduleFixture: TestingModule = await Test.createTestingModule({
-            imports: [AppModule],
-        })
-            .overrideProvider(DATABASE_CONNECTION)
-            .useValue(dbHelper.db)
-            .overrideProvider(CACHE_MANAGER)
-            .useValue(cacheMock)
-            .compile();
+  afterEach(async () => {
+    if (dbHelper) {
+      await dbHelper.db.delete(todos);
+    }
+    await app.close();
+  });
 
-        app = moduleFixture.createNestApplication();
-        await app.init();
-    });
+  it('/GET todos', () => {
+    return request(app.getHttpServer()).get('/todos').expect(200);
+  });
 
-    afterEach(async () => {
-        if (dbHelper) {
-            await dbHelper.db.delete(todos);
-        }
-        await app.close();
-    });
+  it('/POST todo', async () => {
+    const todo: CreateTodoDto = {
+      name: 'ori',
+      subject: 'Military',
+      priority: 7,
+      date: new Date(),
+      geometryType: 'Point',
+      lat: 34.7777,
+      lng: 77.7777,
+      coordinates: null,
+    };
 
-    it('/GET todos', () => {
-        return request(app.getHttpServer())
-            .get('/todos')
-            .expect(200)
-    });
+    const response = await request(app.getHttpServer())
+      .post('/todos')
+      .send(todo)
+      .expect(201);
 
-    it('/POST todo', () => {
-        const todo: CreateTodoDto = {
-            name: "ori",
-            subject: "Military",
-            priority: 7,
-            date: new Date(),
-            geometryType: "Point",
-            lat: 34.7777,
-            lng: 77.7777,
-            coordinates: null,
-        }
+    expect(response.body).toBeDefined();
+    expect(response.body.name).toBe(todo.name);
+    expect(response.body.subject).toBe(todo.subject);
+    expect(response.body.priority).toBe(todo.priority);
+    expect(response.body.geometryType).toBe(todo.geometryType);
+    expect(response.body.id).toBeDefined();
+  });
 
-        return request(app.getHttpServer())
-            .post('/todos')
-            .send(todo)
-            .expect(201)
-    })
+  it('/POST todo with empty name', () => {
+    const todo: CreateTodoDto = {
+      name: '',
+      subject: 'Military',
+      priority: 7,
+      date: new Date(),
+      geometryType: 'Point',
+      lat: 34.7777,
+      lng: 77.7777,
+      coordinates: null,
+    };
 
-    it('/POST todo with empty name', () => {
-        const todo: CreateTodoDto = {
-            name: "",
-            subject: "Military",
-            priority: 7,
-            date: new Date(),
-            geometryType: "Point",
-            lat: 34.7777,
-            lng: 77.7777,
-            coordinates: null,
-        }
+    return request(app.getHttpServer()).post('/todos').send(todo).expect(400);
+  });
 
-        return request(app.getHttpServer())
-            .post('/todos')
-            .send(todo)
-            .expect(400)
-    })
+  it('/DELETE todo', async () => {
+    const todo: CreateTodoDto = {
+      name: 'ori',
+      subject: 'Military',
+      priority: 7,
+      date: new Date(),
+      geometryType: 'Point',
+      lat: 34.7777,
+      lng: 77.7777,
+      coordinates: null,
+    };
 
-    it('/DELETE todo', async () => {
-        const todo: CreateTodoDto = {
-            name: "ori",
-            subject: "Military",
-            priority: 7,
-            date: new Date(),
-            geometryType: "Point",
-            lat: 34.7777,
-            lng: 77.7777,
-            coordinates: null,
-        }
+    const todoid = await dbHelper.db
+      .insert(todos)
+      .values(todo)
+      .returning({ id: todos.id });
 
-        const todoid = await dbHelper.db.insert(todos).values(todo).returning({ id: todos.id });
+    return request(app.getHttpServer())
+      .delete('/todos/' + todoid[0].id)
+      .expect(200);
+  });
 
-        return request(app.getHttpServer())
-            .delete('/todos/' + todoid[0].id)
-            .expect(200)
-    })
+  it('/PATCH todo', async () => {
+    const todo: CreateTodoDto = {
+      name: 'ori',
+      subject: 'Military',
+      priority: 7,
+      date: new Date(),
+      geometryType: 'Point',
+      lat: 34.7777,
+      lng: 77.7777,
+      coordinates: null,
+    };
 
-    it('/PATCH todo', async () => {
-        const todo: CreateTodoDto = {
-            name: "ori",
-            subject: "Military",
-            priority: 7,
-            date: new Date(),
-            geometryType: "Point",
-            lat: 34.7777,
-            lng: 77.7777,
-            coordinates: null,
-        }
+    const todoid = await dbHelper.db
+      .insert(todos)
+      .values(todo)
+      .returning({ id: todos.id });
 
-        const todoid = await dbHelper.db.insert(todos).values(todo).returning({ id: todos.id });
+    const updatedTodo: UpdateTodoDto = {
+      name: 'oriiiii',
+      subject: 'Military',
+      priority: 7,
+      date: new Date(),
+      geometryType: 'Point',
+      lat: 34.7777,
+      lng: 77.7777,
+      coordinates: null,
+    };
 
-        const updatedTodo: UpdateTodoDto = {
-            name: "oriiiii",
-            subject: "Military",
-            priority: 7,
-            date: new Date(),
-            geometryType: "Point",
-            lat: 34.7777,
-            lng: 77.7777,
-            coordinates: null,
-        }
+    return request(app.getHttpServer())
+      .patch('/todos/' + todoid[0].id)
+      .send(updatedTodo)
+      .expect(200);
+  });
 
-        return request(app.getHttpServer())
-            .patch('/todos/' + todoid[0].id)
-            .send(updatedTodo)
-            .expect(200)    
-    })
+  it('/PATCH toggle todo', async () => {
+    const todo: CreateTodoDto = {
+      name: 'ori',
+      subject: 'Military',
+      priority: 7,
+      date: new Date(),
+      geometryType: 'Point',
+      lat: 34.7777,
+      lng: 77.7777,
+      coordinates: null,
+    };
 
-    it('/PATCH toggle todo', async () => {
-        const todo: CreateTodoDto = {
-            name: "ori",
-            subject: "Military",
-            priority: 7,
-            date: new Date(),
-            geometryType: "Point",
-            lat: 34.7777,
-            lng: 77.7777,
-            coordinates: null,
-        }
+    const todoid = await dbHelper.db
+      .insert(todos)
+      .values(todo)
+      .returning({ id: todos.id });
 
-        const todoid = await dbHelper.db.insert(todos).values(todo).returning({ id: todos.id });
-
-        return request(app.getHttpServer())
-            .patch('/todos/' + todoid[0].id + '/toggle')
-            .expect(200)
-    })
-})
+    return request(app.getHttpServer())
+      .patch('/todos/' + todoid[0].id + '/toggle')
+      .expect(200);
+  });
+});

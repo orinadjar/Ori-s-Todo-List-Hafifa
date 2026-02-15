@@ -14,8 +14,11 @@ import { TodosService } from './todos.service';
 import { ZodValidationPipe } from '../common/pipes/zodVlaidation.pipe';
 import {
   CreateTodoSchema,
+  FilterGeometrySchema,
+  PaginationQuerySchema,
   updateTodoSchema,
   type CreateTodoDto,
+  type FilterGeometryDto,
   type UpdateTodoDto,
 } from '../dto/todosDto.dto';
 
@@ -24,15 +27,21 @@ export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Get()
-  findAll(@Query('limit') limit: number, @Query('offset') offset: number) {
+  findAll(
+    @Query('limit', new ZodValidationPipe(PaginationQuerySchema)) limit: number,
+    @Query('offset', new ZodValidationPipe(PaginationQuerySchema))
+    offset: number,
+  ) {
     return this.todosService.findAllTodos(limit, offset);
   }
 
   @Post('/filter')
   findAllFiltered(
-    @Body('filterGeometry') filterGeometry: string,
-    @Query('limit') limit: number,
-    @Query('offset') offset: number,
+    @Body('filterGeometry', new ZodValidationPipe(FilterGeometrySchema))
+    filterGeometry: FilterGeometryDto,
+    @Query('limit', new ZodValidationPipe(PaginationQuerySchema)) limit: number,
+    @Query('offset', new ZodValidationPipe(PaginationQuerySchema))
+    offset: number,
   ) {
     return this.todosService.findAllTodos(limit, offset, filterGeometry);
   }

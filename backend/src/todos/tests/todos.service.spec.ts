@@ -61,10 +61,10 @@ describe('TodoService', () => {
         subject: 'work',
         priority: 5,
         date: new Date(),
-        geometryType: 'Point',
-        lan: 38.88,
-        lng: 88.88,
-        coordinates: null,
+        geom: {
+          type: 'Point',
+          coordinates: [38.88, 88.88],
+        },
       },
     ];
 
@@ -90,10 +90,10 @@ describe('TodoService', () => {
       subject: 'Work' as const,
       priority: 5,
       date: new Date(),
-      geometryType: 'Point' as const,
-      lat: 38.88,
-      lng: 88.88,
-      isCompleted: false,
+      geom: {
+        type: 'Point' as const,
+        coordinates: [38.88, 88.88],
+      },
     };
 
     cacheMock.get.mockResolvedValue(null);
@@ -136,16 +136,7 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      coordinates: [
-        [
-          [77.7, 77.7],
-          [77.7, 77.7],
-          [77.7, 77.7],
-          [77.7, 77.7],
-          [77.7, 77.7],
-        ],
-      ],
+      geom: filterGeometry,
     };
 
     cacheMock.get.mockResolvedValue(null);
@@ -171,27 +162,8 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      coordinates: [
-        [
-          [8, 9],
-          [9, 9],
-          [33, 8],
-          [89, 32],
-          [8, 9],
-        ],
-      ],
-    };
-
-    const fakecache = [
-      {
-        id: '1',
-        name: 'mockTodo2',
-        subject: 'Work',
-        priority: 5,
-        date: new Date(),
-        geometryType: 'Polygon',
-        isCompleted: false,
+      geom: {
+        type: 'Polygon',
         coordinates: [
           [
             [8, 9],
@@ -201,6 +173,28 @@ describe('TodoService', () => {
             [8, 9],
           ],
         ],
+      },
+    };
+
+    const fakecache = [
+      {
+        id: '1',
+        name: 'mockTodo2',
+        subject: 'Work',
+        priority: 5,
+        date: new Date(),
+        geom: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [8, 9],
+              [9, 9],
+              [33, 8],
+              [89, 32],
+              [8, 9],
+            ],
+          ],
+        },
       },
     ];
 
@@ -222,16 +216,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const insertedTodo = await todosService.addTodo(todoData);
@@ -252,16 +248,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const updateTodoData: UpdateTodoDto = {
@@ -269,16 +267,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const insertedTodo = await todosService.addTodo(todoData);
@@ -299,16 +299,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const insertedTodo = await todosService.addTodo(todoData);

@@ -12,19 +12,19 @@ const TodosLayer = () => {
     const searchTerm = useAtomValue(debouncedSearchAtom);
 
     const { todos } = useTodos(searchTerm);
-    
+
     const todosGeoJson = {
         type: 'FeatureCollection',
         features: todos.map(todo => ({
             type: 'Feature',
             geometry: {
-                type: todo.geometryType === 'Point' ? 'Point' : 'Polygon',
-                coordinates: todo.lat !== 0 && todo.lng !== 0 ? [todo.lat, todo.lng] : todo.coordinates,
+                type: todo.geom.type,
+                coordinates: todo.geom.coordinates,
             },
             properties: {
                 id: todo.id,
                 name: todo.name,
-                icon: todo.geometryType === 'Point' ? todo.isCompleted ? completedIcon : unCompletedIcon : undefined,
+                icon: todo.geom.type === 'Point' ? todo.isCompleted ? completedIcon : unCompletedIcon : undefined,
                 tooltipContent: {
                     name: todo.name,
                     priority: todo.priority,

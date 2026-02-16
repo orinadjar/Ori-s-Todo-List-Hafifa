@@ -56,10 +56,10 @@ describe('TodosController', () => {
         priority: 5,
         date: new Date(),
         isCompleted: false,
-        geometryType: 'Point',
-        lat: 0,
-        lng: 0,
-        coordinates: null,
+        geom: {
+          type: 'Point',
+          coordinates: [0, 0],
+        },
       },
     ];
 
@@ -85,6 +85,7 @@ describe('TodosController', () => {
         ],
       ],
     };
+
     const expectedResult = [
       {
         id: '1',
@@ -93,10 +94,17 @@ describe('TodosController', () => {
         priority: 5,
         date: new Date(),
         isCompleted: false,
-        geometryType: 'Point',
-        lat: 0,
-        lng: 0,
-        coordinates: null,
+        geom: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [3819839.3045508224, 3906525.9832158852],
+              [4085504.140501627, 3929457.091701438],
+              [3968960.3264575778, 3823973.992667895],
+              [3819839.3045508224, 3906525.9832158852],
+            ],
+          ],
+        },
       },
     ];
 
@@ -122,9 +130,10 @@ describe('TodosController', () => {
       subject: 'Work' as const,
       priority: 5,
       date: new Date(),
-      geometryType: 'Point' as const,
-      lat: 40.7128,
-      lng: 74.006,
+      geom: {
+        type: 'Point',
+        coordinates: [40.7128, 74.006],
+      },
     };
 
     const expectedResult = {
@@ -148,9 +157,10 @@ describe('TodosController', () => {
       subject: 'Work' as const,
       priority: 5,
       date: new Date(),
-      geometryType: 'Point' as const,
-      lat: 38.888,
-      lng: 39.999,
+      geom: {
+        type: 'Point',
+        coordinates: [38.888, 39.999],
+      },
     };
 
     mockTodosService.addTodo.mockRejectedValue(new Error('validation error'));
@@ -178,9 +188,10 @@ describe('TodosController', () => {
     const fields: UpdateTodoDto = {
       name: 'todo 1',
       priority: 7,
-      geometryType: 'Point',
-      lat: 77.77,
-      lng: 78.77,
+      geom: {
+        type: 'Point',
+        coordinates: [77.77, 70.77],
+      },
     };
 
     mockTodosService.updateTodo.mockResolvedValue(fields);
@@ -200,10 +211,10 @@ describe('TodosController', () => {
       priority: 3,
       date: new Date(),
       isCompleted: true,
-      geometryType: 'Point' as const,
-      lat: 70,
-      lng: 30,
-      coordinates: null,
+      geom: {
+        type: 'Point',
+        coordinates: [70, 30],
+      },
     };
 
     mockTodosService.toggleTodo.mockResolvedValue(expectedResult);

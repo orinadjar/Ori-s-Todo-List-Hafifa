@@ -2,6 +2,8 @@ import { pgTable, pgEnum, customType } from 'drizzle-orm/pg-core';
 import * as t from 'drizzle-orm/pg-core';
 import wkx from 'wkx';
 
+import { geometryTypes } from '../../src/dto/todosDto.dto';
+
 export const todoSubjectEnum = pgEnum('todo_subject', [
   'Work',
   'Personal',
@@ -11,12 +13,12 @@ export const todoSubjectEnum = pgEnum('todo_subject', [
 ]);
 
 export const todoGeometryTypeEnum = pgEnum('todo_geometry_type', [
-  'Point',
-  'Polygon',
+  geometryTypes.point,
+  geometryTypes.Polygon,
 ]);
 
 export type GeometryInput =
-  | { type: 'Point'; lat: number; lng: number }
+  | { type: 'Point'; coordinates: number[] }
   | { type: 'Polygon'; coordinates: number[][][] };
 
 interface WkxResult {
@@ -30,7 +32,7 @@ const geometry = customType<{ data: GeometryInput }>({
   },
   toDriver(value: GeometryInput): string {
     if (value.type === 'Point') {
-      return `SRID=4326; POINT(${value.lng} ${value.lat})`;
+      return `SRID=4326; POINT(${value.coordinates[0]} ${value.coordinates[1]})`;
     }
     const rings = value.coordinates
       .map((ring) => '(' + ring.map(([x, y]) => `${x} ${y}`).join(', ') + ')')
@@ -41,22 +43,10 @@ const geometry = customType<{ data: GeometryInput }>({
     const buffer = Buffer.from(value, 'hex');
     const geoJsonGeom = wkx.Geometry.parse(buffer).toGeoJSON() as WkxResult;
 
-    if (geoJsonGeom.type === 'Point') {
-      return {
-        type: 'Point',
-        lng: geoJsonGeom.coordinates[0],
-        lat: geoJsonGeom.coordinates[1],
-      } as GeometryInput;
-    }
-
-    if (geoJsonGeom.type === 'Polygon') {
-      return {
-        type: 'Polygon',
-        coordinates: geoJsonGeom.coordinates,
-      } as GeometryInput;
-    }
-
-    throw new Error(`Unsupported geometry type: ${geoJsonGeom.type}`);
+    return {
+      type: geoJsonGeom.type,
+      coordinates: geoJsonGeom.coordinates,
+    } as GeometryInput;
   },
 });
 
@@ -67,10 +57,5 @@ export const todos = pgTable('todos', {
   priority: t.integer('priority').notNull(),
   date: t.timestamp('date').notNull(),
   isCompleted: t.boolean('is_completed').default(false).notNull(),
-  geometryType: todoGeometryTypeEnum('geometry_type')
-    .default('Point')
-    .notNull(),
-  lat: t.doublePrecision('lat').notNull(),
-  lng: t.doublePrecision('lng').notNull(),
   geom: geometry('geom'),
 });

@@ -14,8 +14,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { TodoSubject } from "../types/types";
 import TodoMapComponent from "./TodoMapComponent";
 
-import type { Todo } from "../types/types";
-
 import { useTodos } from "../hooks/useTodos";
 
 const SUBJECTS: TodoSubject[] = ['Work', 'Personal', 'Military', 'Urgent', 'General']
@@ -28,7 +26,7 @@ interface Props {
 
 const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
   const { todos, addTodo, updateTodo } = useTodos();
-  
+
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('General');
   const [priority, setPriority] = useState(2);
@@ -59,10 +57,9 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
         subject: subject as TodoSubject,
         priority,
         date: finalDate,
-        geometryType,
-        lat: geometryType === 'Point' && pointCoordinates ? pointCoordinates[0] : 0,
-        lng: geometryType === 'Point' && pointCoordinates ? pointCoordinates[1] : 0,
-        coordinates: geometryType === 'Polygon' ? polygonCoordinates : null,
+        geom: geometryType === 'Point' && pointCoordinates
+          ? { type: 'Point' as const, coordinates: pointCoordinates }
+          : { type: 'Polygon' as const, coordinates: polygonCoordinates ?? [] }
       }
 
       if (editingTodoId) {
@@ -82,14 +79,14 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
       setSubject(todoToEdit.subject);
       setPriority(todoToEdit.priority);
       setDate(dayjs(todoToEdit.date));
-      setGeometryType(todoToEdit.geometryType);
+      setGeometryType(todoToEdit.geom.type);
 
-      if (todoToEdit.geometryType === 'Polygon' && todoToEdit.lat === 0 && todoToEdit.lng === 0 && todoToEdit.coordinates) {
-        setPolygonCoordinates(todoToEdit.coordinates);
+      if (todoToEdit.geom.type === 'Polygon') {
+        setPolygonCoordinates(todoToEdit.geom.coordinates as number[][][]);
         setPointCoordinates(null);
       }
-      else if (todoToEdit.geometryType === 'Point' && todoToEdit.lat !== undefined && todoToEdit.lng !== undefined) {
-        setPointCoordinates([todoToEdit.lat, todoToEdit.lng]);
+      else if (todoToEdit.geom.type === 'Point') {
+        setPointCoordinates(todoToEdit.geom.coordinates as [number, number]);
         setPolygonCoordinates(null);
       }
     }
@@ -160,15 +157,14 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
         <Box sx={{ mt: 1, height: '300px', width: '100%', borderRadius: 2 }}>
           <TodoMapComponent
             mode={geometryType}
-            todos={[
-              {
-                ...todoToEdit,
-                geometryType: geometryType,
-                lat: geometryType === 'Point' && pointCoordinates ? pointCoordinates[0] : 0,
-                lng: geometryType === 'Point' && pointCoordinates ? pointCoordinates[1] : 0,
-                coordinates: geometryType === 'Polygon' && todoToEdit?.lat === 0 && todoToEdit.lng === 0 ? todoToEdit?.coordinates : undefined,
-              }
-            ] as Todo[]}
+            todos={todoToEdit ? [{
+              ...todoToEdit,
+              geom: geometryType === 'Point' && pointCoordinates
+                ? { type: 'Point' as const, coordinates: pointCoordinates }
+                : geometryType === 'Polygon' && polygonCoordinates
+                  ? { type: 'Polygon' as const, coordinates: polygonCoordinates }
+                  : todoToEdit.geom || { type: 'Point' as const, coordinates: [0, 0] }
+            }] : []}
             onLocationSelect={(cordinates) => setPointCoordinates(cordinates)}
             onPolygonSelect={(coordinates) => setPolygonCoordinates(coordinates)}
           />

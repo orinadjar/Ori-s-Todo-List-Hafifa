@@ -8,7 +8,7 @@ import {
   type FilterGeometryDto,
   type UpdateTodoDto,
   type Todo,
-  type TodoGeometryType,
+  geometryTypes,
 } from '..//dto/todosDto.dto';
 
 import * as schema from '../db/schema';
@@ -60,57 +60,27 @@ export class TodosService {
     if (!filterGeometry)
       await this.cacheManager.set(RedisKeys.getTodosKey(limit, offset), rows);
 
-    return rows.map((todoRow) => {
-      const baseTodo = {
-        id: todoRow.id,
-        name: todoRow.name,
-        subject: todoRow.subject,
-        priority: todoRow.priority,
-        date: todoRow.date,
-        isCompleted: todoRow.isCompleted,
-        geometryType: todoRow.geometryType,
-      };
-
-      if (todoRow.geom?.type === 'Point') {
-        return {
-          ...baseTodo,
-          lat: todoRow.geom.lat,
-          lng: todoRow.geom.lng,
-        };
-      } else if (todoRow.geom?.type === 'Polygon') {
-        return {
-          ...baseTodo,
-          coordinates: todoRow.geom.coordinates,
-        };
-      }
-    }) as Todo[];
+    return rows as Todo[];
   }
 
   // CREATE: AddTodo
   async addTodo(createTodoDto: CreateTodoDto) {
-    const { geometryType, ...rest } = createTodoDto;
-
-    let lat: number;
-    let lng: number;
-    if (geometryType === 'Point') {
-      lat = createTodoDto.lat;
-      lng = createTodoDto.lng;
-    } else {
-      lat = 0;
-      lng = 0;
-    }
+    const geom =
+      createTodoDto.geom.type === geometryTypes.point
+        ? {
+            type: createTodoDto.geom.type,
+            coordinates: createTodoDto.geom.coordinates,
+          }
+        : {
+            type: createTodoDto.geom.type,
+            coordinates: createTodoDto.geom.coordinates ?? [],
+          };
 
     const newTodo = await this.db
       .insert(todos)
       .values({
-        ...rest,
-        lat,
-        lng,
-        geometryType: geometryType,
-        geom:
-          geometryType === 'Polygon' && createTodoDto.coordinates
-            ? { type: 'Polygon', coordinates: createTodoDto.coordinates }
-            : { type: 'Point', lat, lng },
+        ...createTodoDto,
+        geom,
         isCompleted: false,
       })
       .returning();
@@ -134,43 +104,20 @@ export class TodosService {
 
   // PATCH updateTodo
   async updateTodo(id: string, updateTodoDto: UpdateTodoDto) {
-    const { geometryType, ...rest } = updateTodoDto;
+    const { geom, ...rest } = updateTodoDto;
 
-    type TodoUpdatePayload = Partial<{
-      name: string;
-      subject: Todo['subject'];
-      priority: number;
-      date: Date;
-      lat: number;
-      lng: number;
-      geometryType: TodoGeometryType;
-      geom:
-        | { type: 'Point'; lat: number; lng: number }
-        | { type: 'Polygon'; coordinates: number[][][] };
-    }>;
-
-    const updateData: TodoUpdatePayload = { ...rest };
-
-    if (geometryType) {
-      if (geometryType === 'Polygon' && updateTodoDto.coordinates) {
-        updateData.geometryType = geometryType;
-        updateData.geom = {
-          type: 'Polygon',
-          coordinates: updateTodoDto.coordinates,
-        };
-        updateData.lat = 0;
-        updateData.lng = 0;
-      } else if (geometryType === 'Point') {
-        updateData.geometryType = geometryType;
-        updateData.geom = {
-          type: 'Point',
-          lat: updateTodoDto.lat,
-          lng: updateTodoDto.lng,
-        };
-        updateData.lat = updateTodoDto.lat;
-        updateData.lng = updateTodoDto.lng;
-      }
-    }
+    const updateData = geom
+      ? {
+          ...rest,
+          geom:
+            geom.type === geometryTypes.point
+              ? { type: geom.type, coordinates: geom.coordinates }
+              : {
+                  type: geom.type,
+                  coordinates: geom.coordinates!,
+                },
+        }
+      : rest;
 
     const updatedTodo = await this.db
       .update(todos)

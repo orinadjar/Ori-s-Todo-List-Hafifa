@@ -8,7 +8,7 @@ import { Server } from 'http';
 import request from 'supertest';
 
 import { setupTestDb, TestDbHelper } from './utils/dbSetup';
-import { todos } from '../../db/schema';
+import { GeometryInput, todos } from '../../db/schema';
 import { AppModule } from '../../app.module';
 import { DATABASE_CONNECTION } from '../../db/db.module';
 import { CreateTodoDto, UpdateTodoDto, Todo } from 'src/dto/todosDto.dto';
@@ -70,9 +70,10 @@ describe('TodosController e2e', () => {
       subject: 'Military',
       priority: 7,
       date: new Date(),
-      geometryType: 'Point',
-      lat: 34.7777,
-      lng: 77.7777,
+      geom: {
+        type: 'Point',
+        coordinates: [34.7777, 77.7777],
+      },
     };
 
     const response = await request(app.getHttpServer() as Server)
@@ -86,7 +87,7 @@ describe('TodosController e2e', () => {
     expect(createdTodo.name).toBe(todo.name);
     expect(createdTodo.subject).toBe(todo.subject);
     expect(createdTodo.priority).toBe(todo.priority);
-    expect(createdTodo.geometryType).toBe(todo.geometryType);
+    expect(createdTodo.geom).toBe(todo.geom);
     expect(createdTodo.id).toBeDefined();
   });
 
@@ -96,9 +97,10 @@ describe('TodosController e2e', () => {
       subject: 'Military',
       priority: 7,
       date: new Date(),
-      geometryType: 'Point',
-      lat: 34.7777,
-      lng: 77.7777,
+      geom: {
+        type: 'Point',
+        coordinates: [34.7777, 77.7777],
+      },
     };
 
     return request(app.getHttpServer() as Server)
@@ -108,14 +110,17 @@ describe('TodosController e2e', () => {
   });
 
   it('/DELETE todo', async () => {
-    const todo: CreateTodoDto = {
+    const geom: GeometryInput = {
+      type: 'Point',
+      coordinates: [34.7777, 77.7777],
+    };
+
+    const todo = {
       name: 'ori',
-      subject: 'Military',
+      subject: 'Military' as const,
       priority: 7,
       date: new Date(),
-      geometryType: 'Point',
-      lat: 34.7777,
-      lng: 77.7777,
+      geom,
     };
 
     const todoid = await dbHelper.db
@@ -129,14 +134,17 @@ describe('TodosController e2e', () => {
   });
 
   it('/PATCH todo', async () => {
-    const todo: CreateTodoDto = {
+    const geom: GeometryInput = {
+      type: 'Point',
+      coordinates: [34.7777, 77.7777],
+    };
+
+    const todo = {
       name: 'ori',
-      subject: 'Military',
+      subject: 'Military' as const,
       priority: 7,
       date: new Date(),
-      geometryType: 'Point',
-      lat: 34.7777,
-      lng: 77.7777,
+      geom,
     };
 
     const todoid = await dbHelper.db
@@ -149,9 +157,7 @@ describe('TodosController e2e', () => {
       subject: 'Military',
       priority: 7,
       date: new Date(),
-      geometryType: 'Point',
-      lat: 34.7777,
-      lng: 77.7777,
+      geom,
     };
 
     return request(app.getHttpServer() as Server)
@@ -161,14 +167,17 @@ describe('TodosController e2e', () => {
   });
 
   it('/PATCH toggle todo', async () => {
-    const todo: CreateTodoDto = {
+    const geom: GeometryInput = {
+      type: 'Point',
+      coordinates: [34.7777, 77.7777],
+    };
+
+    const todo = {
       name: 'ori',
-      subject: 'Military',
+      subject: 'Military' as const,
       priority: 7,
       date: new Date(),
-      geometryType: 'Point',
-      lat: 34.7777,
-      lng: 77.7777,
+      geom,
     };
 
     const todoid = await dbHelper.db

@@ -1,11 +1,8 @@
 import { Module, Global } from '@nestjs/common';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { ConfigService } from '@nestjs/config';
-import { Pool } from 'pg';
 import * as schema from './schema';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
+import * as pg from 'pg';
 
 export const DATABASE_CONNECTION = 'database_connection';
 
@@ -15,9 +12,14 @@ export const DATABASE_CONNECTION = 'database_connection';
     {
       provide: DATABASE_CONNECTION,
       useFactory: (configService: ConfigService) => {
-        const pool = new Pool({
-          connectionString: configService.getOrThrow('DATABASE_URL'),
-        });
+        const { Pool } = pg;
+
+        const poolConfig: pg.PoolConfig = {
+          connectionString: configService.getOrThrow<string>('DATABASE_URL'),
+        };
+
+        const pool = new Pool(poolConfig);
+
         return drizzle(pool, { schema });
       },
       inject: [ConfigService],

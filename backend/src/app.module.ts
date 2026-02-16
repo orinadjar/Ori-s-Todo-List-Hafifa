@@ -14,6 +14,8 @@ import Keyv from 'keyv';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'development' ? '.env.dev' : undefined,
       validate: (config) => {
         return envSchema.parse(config);
       },

@@ -2,13 +2,14 @@ import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-q
 
 import type { Todo } from '../types/types';
 import { useAtomValue } from 'jotai';
-import { searchGeoJsonAtom } from '../atoms/mapAtoms';
+import { isSearchGeometryAtom, searchGeoJsonAtom } from '../atoms/mapAtoms';
 
 const TODO_URL = `${import.meta.env.VITE_API_URL}/todos`;
 
 export const useTodos = (searchTerm?: string) => {
     const queryClient = useQueryClient();
     const searchGeoJson = useAtomValue(searchGeoJsonAtom);
+    const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
 
     // GET: GetAllTodos
     const { data, isLoading, error, status, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<Todo[]>({

@@ -137,8 +137,6 @@ describe('TodoService', () => {
       priority: 5,
       date: new Date(),
       geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
       coordinates: [
         [
           [77.7, 77.7],
@@ -163,8 +161,6 @@ describe('TodoService', () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toEqual(insertedTodo.id);
     expect(result[0].name).toEqual(insertedTodo.name);
-    expect(result[0].lat).not.toEqual('0');
-    expect(result[0].lng).not.toEqual('0');
 
     expect(cacheMock.set).not.toHaveBeenCalled();
   });
@@ -176,38 +172,37 @@ describe('TodoService', () => {
       priority: 5,
       date: new Date(),
       geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
       coordinates: [
         [
           [8, 9],
           [9, 9],
           [33, 8],
           [89, 32],
-          [98, 11],
+          [8, 9],
         ],
       ],
     };
 
-    const fakecache = {
-      id: '1',
-      name: 'mockTodo2',
-      subject: 'Work',
-      priority: 5,
-      date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [8, 9],
-          [9, 9],
-          [33, 8],
-          [89, 32],
-          [98, 11],
+    const fakecache = [
+      {
+        id: '1',
+        name: 'mockTodo2',
+        subject: 'Work',
+        priority: 5,
+        date: new Date(),
+        geometryType: 'Polygon',
+        isCompleted: false,
+        coordinates: [
+          [
+            [8, 9],
+            [9, 9],
+            [33, 8],
+            [89, 32],
+            [8, 9],
+          ],
         ],
-      ],
-    };
+      },
+    ];
 
     cacheMock.get.mockResolvedValue(fakecache);
 
@@ -228,8 +223,6 @@ describe('TodoService', () => {
       priority: 5,
       date: new Date(),
       geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
       coordinates: [
         [
           [34.75, 32.05],
@@ -245,6 +238,8 @@ describe('TodoService', () => {
 
     await todosService.deleteTodo(insertedTodo.id);
 
+    cacheMock.get.mockResolvedValue(null);
+
     const result = await todosService.findAllTodos(limit, offset);
 
     expect(result).toHaveLength(0);
@@ -258,8 +253,6 @@ describe('TodoService', () => {
       priority: 5,
       date: new Date(),
       geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
       coordinates: [
         [
           [34.75, 32.05],
@@ -277,8 +270,6 @@ describe('TodoService', () => {
       priority: 5,
       date: new Date(),
       geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
       coordinates: [
         [
           [34.75, 32.05],
@@ -309,8 +300,6 @@ describe('TodoService', () => {
       priority: 5,
       date: new Date(),
       geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
       coordinates: [
         [
           [34.75, 32.05],

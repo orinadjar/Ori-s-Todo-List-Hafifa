@@ -4,10 +4,11 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, getTableColumns, lt, not, sql } from 'drizzle-orm';
 
 import {
-  coordinatesSchemaDto,
   type CreateTodoDto,
   type FilterGeometryDto,
   type UpdateTodoDto,
+  type Todo,
+  type TodoGeometryType,
 } from '..//dto/todosDto.dto';
 
 import * as schema from '../db/schema';
@@ -30,9 +31,9 @@ export class TodosService {
     limit: number,
     offset: number,
     filterGeometry?: FilterGeometryDto,
-  ) {
+  ): Promise<Todo[]> {
     if (!filterGeometry) {
-      const cachedTodos = await this.cacheManager.get(
+      const cachedTodos = await this.cacheManager.get<Todo[]>(
         RedisKeys.getTodosKey(limit, offset),
       );
       if (cachedTodos) {
@@ -42,10 +43,7 @@ export class TodosService {
     }
 
     let query = this.db
-      .select({
-        ...getTableColumns(todos),
-        coordinates: sql<coordinatesSchemaDto>`ST_AsGeoJSON(${todos.geom})::json->'coordinates'`,
-      })
+      .select(getTableColumns(todos))
       .from(todos)
       .$dynamic()
       .limit(limit)
@@ -57,17 +55,35 @@ export class TodosService {
       );
     }
 
-    const todosAwait = await query;
+    const rows = await query;
 
     if (!filterGeometry)
-      await this.cacheManager.set(
-        RedisKeys.getTodosKey(limit, offset),
-        todosAwait,
-      );
+      await this.cacheManager.set(RedisKeys.getTodosKey(limit, offset), rows);
 
-    // console.log("--" + query.toSQL().sql);
+    return rows.map((todoRow) => {
+      const baseTodo = {
+        id: todoRow.id,
+        name: todoRow.name,
+        subject: todoRow.subject,
+        priority: todoRow.priority,
+        date: todoRow.date,
+        isCompleted: todoRow.isCompleted,
+        geometryType: todoRow.geometryType,
+      };
 
-    return todosAwait;
+      if (todoRow.geom?.type === 'Point') {
+        return {
+          ...baseTodo,
+          lat: todoRow.geom.lat,
+          lng: todoRow.geom.lng,
+        };
+      } else if (todoRow.geom?.type === 'Polygon') {
+        return {
+          ...baseTodo,
+          coordinates: todoRow.geom.coordinates,
+        };
+      }
+    }) as Todo[];
   }
 
   // CREATE: AddTodo
@@ -120,7 +136,20 @@ export class TodosService {
   async updateTodo(id: string, updateTodoDto: UpdateTodoDto) {
     const { geometryType, ...rest } = updateTodoDto;
 
-    const updateData: any = { ...rest };
+    type TodoUpdatePayload = Partial<{
+      name: string;
+      subject: Todo['subject'];
+      priority: number;
+      date: Date;
+      lat: number;
+      lng: number;
+      geometryType: TodoGeometryType;
+      geom:
+        | { type: 'Point'; lat: number; lng: number }
+        | { type: 'Polygon'; coordinates: number[][][] };
+    }>;
+
+    const updateData: TodoUpdatePayload = { ...rest };
 
     if (geometryType) {
       if (geometryType === 'Polygon' && updateTodoDto.coordinates) {

@@ -12,15 +12,13 @@ export const TodoGeometryTypeSchema = z.enum(['Point', 'Polygon']);
 
 export const coordinatesSchema = z.array(z.array(z.array(z.number())));
 
-export const FilterGeometrySchema = z
-  .string()
-  .transform((val) => JSON.parse(val))
-  .pipe(
-    z.object({
-      type: z.enum(['Point', 'Polygon']),
-      coordinates: coordinatesSchema,
-    }),
-  );
+export const FilterGeometrySchema = z.preprocess(
+  (val) => (typeof val === 'string' ? (JSON.parse(val) as object) : val),
+  z.object({
+    type: z.enum(['Point', 'Polygon']),
+    coordinates: coordinatesSchema,
+  }),
+);
 
 const TodoGeometrySchema = z.discriminatedUnion('geometryType', [
   z.object({

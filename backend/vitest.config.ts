@@ -1,8 +1,8 @@
+import { loadEnvFile } from 'process';
 import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
-import { config } from 'dotenv';
 
-config({ path: '.env.test' });
+loadEnvFile('.env.test');
 
 export default defineConfig({
   test: {

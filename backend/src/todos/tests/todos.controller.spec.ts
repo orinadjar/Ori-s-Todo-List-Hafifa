@@ -3,7 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { TodosController } from '../todos.controller';
 import { TodosService } from '../todos.service';
-import { CreateTodoDto, UpdateTodoDto } from 'src/dto/todosDto.dto';
+import {
+  CreateTodoDto,
+  FilterGeometryDto,
+  UpdateTodoDto,
+} from 'src/dto/todosDto.dto';
 
 describe('TodosController', () => {
   let todosController: TodosController;
@@ -70,8 +74,17 @@ describe('TodosController', () => {
   it('GET /todos/filter, should call findAllTodos with correct parameters and filterGeometry and return expected result', async () => {
     const limit = 15;
     const offset = 0;
-    const filterGeometry =
-      '{"type":"Polygon","coordinates":[[[3819839.3045508224,3906525.9832158852],[4085504.140501627,3929457.091701438],[3968960.3264575778,3823973.992667895],[3819839.3045508224,3906525.9832158852]]]}';
+    const filterGeometry: FilterGeometryDto = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [3819839.3045508224, 3906525.9832158852],
+          [4085504.140501627, 3929457.091701438],
+          [3968960.3264575778, 3823973.992667895],
+          [3819839.3045508224, 3906525.9832158852],
+        ],
+      ],
+    };
     const expectedResult = [
       {
         id: '1',
@@ -138,7 +151,6 @@ describe('TodosController', () => {
       geometryType: 'Point' as const,
       lat: 38.888,
       lng: 39.999,
-      coordinates: null,
     };
 
     mockTodosService.addTodo.mockRejectedValue(new Error('validation error'));
@@ -166,6 +178,9 @@ describe('TodosController', () => {
     const fields: UpdateTodoDto = {
       name: 'todo 1',
       priority: 7,
+      geometryType: 'Point',
+      lat: 77.77,
+      lng: 78.77,
     };
 
     mockTodosService.updateTodo.mockResolvedValue(fields);

@@ -8,10 +8,16 @@ import { Server } from 'http';
 import request from 'supertest';
 
 import { setupTestDb, TestDbHelper } from './utils/dbSetup';
-import { GeometryInput, todos } from '../../db/schema';
+import { todos } from '../../db/schema';
 import { AppModule } from '../../app.module';
 import { DATABASE_CONNECTION } from '../../db/db.module';
-import { CreateTodoDto, UpdateTodoDto, Todo } from 'src/dto/todosDto.dto';
+import {
+  CreateTodoDto,
+  UpdateTodoDto,
+  Todo,
+  TodoGeometryDto,
+  GeometryInput,
+} from 'src/dto/todosDto.dto';
 
 describe('TodosController e2e', () => {
   let app: INestApplication;
@@ -60,7 +66,7 @@ describe('TodosController e2e', () => {
 
   it('/GET todos', () => {
     return request(app.getHttpServer() as Server)
-      .get('/todos')
+      .get('/todos?limit=15&offset=0')
       .expect(200);
   });
 
@@ -87,7 +93,7 @@ describe('TodosController e2e', () => {
     expect(createdTodo.name).toBe(todo.name);
     expect(createdTodo.subject).toBe(todo.subject);
     expect(createdTodo.priority).toBe(todo.priority);
-    expect(createdTodo.geom).toBe(todo.geom);
+    expect(createdTodo.geom).toEqual(todo.geom);
     expect(createdTodo.id).toBeDefined();
   });
 
@@ -134,14 +140,14 @@ describe('TodosController e2e', () => {
   });
 
   it('/PATCH todo', async () => {
-    const geom: GeometryInput = {
+    const geom: TodoGeometryDto = {
       type: 'Point',
       coordinates: [34.7777, 77.7777],
     };
 
-    const todo = {
+    const todo: CreateTodoDto = {
       name: 'ori',
-      subject: 'Military' as const,
+      subject: 'Military',
       priority: 7,
       date: new Date(),
       geom,

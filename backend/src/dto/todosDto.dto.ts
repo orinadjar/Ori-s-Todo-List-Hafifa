@@ -15,25 +15,10 @@ export const geometryTypes = {
 
 export const TodoCoordinatesTyps = {
   PolygonCoords: z.array(z.array(z.array(z.number()))),
-  PointCoords: z.array(z.number()),
+  PointCoords: z.tuple([z.number(), z.number()]),
 } as const;
 
-export const FilterGeometrySchema = z.preprocess(
-  (val) => (typeof val === 'string' ? (JSON.parse(val) as object) : val),
-  z.discriminatedUnion('type', [
-    z.object({
-      type: z.literal(geometryTypes.point),
-      coordinates: TodoCoordinatesTyps.PointCoords,
-    }),
-
-    z.object({
-      type: z.literal(geometryTypes.Polygon),
-      coordinates: TodoCoordinatesTyps.PolygonCoords.nullable().optional(),
-    }),
-  ]),
-);
-
-const TodoGeometrySchema = z.discriminatedUnion('type', [
+export const TodoGeometrySchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal(geometryTypes.point),
     coordinates: TodoCoordinatesTyps.PointCoords,
@@ -41,9 +26,14 @@ const TodoGeometrySchema = z.discriminatedUnion('type', [
 
   z.object({
     type: z.literal(geometryTypes.Polygon),
-    coordinates: TodoCoordinatesTyps.PolygonCoords.nullable().optional(),
+    coordinates: TodoCoordinatesTyps.PolygonCoords,
   }),
 ]);
+
+export const FilterGeometrySchema = z.preprocess(
+  (val) => (typeof val === 'string' ? (JSON.parse(val) as object) : val),
+  TodoGeometrySchema,
+);
 
 const TodoFieldsSchema = z
   .object({
@@ -72,5 +62,6 @@ export type Todo = z.infer<typeof TodoSchema>;
 export type CreateTodoDto = z.infer<typeof CreateTodoSchema>;
 export type UpdateTodoDto = z.infer<typeof updateTodoSchema>;
 export type TodoSubject = z.infer<typeof TodoSubjectSchema>;
-export type TodoGeometryType = z.infer<typeof geometryTypes>;
 export type FilterGeometryDto = z.infer<typeof FilterGeometrySchema>;
+export type TodoGeometryDto = z.infer<typeof TodoGeometrySchema>;
+export type GeometryInput = z.infer<typeof TodoGeometrySchema>;

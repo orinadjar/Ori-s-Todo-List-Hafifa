@@ -114,7 +114,7 @@ export class TodosService {
               ? { type: geom.type, coordinates: geom.coordinates }
               : {
                   type: geom.type,
-                  coordinates: geom.coordinates!,
+                  coordinates: geom.coordinates,
                 },
         }
       : rest;

@@ -85,13 +85,13 @@ describe('TodoService', () => {
     const limit = 15;
     const offset = 0;
 
-    const todoData = {
+    const todoData: CreateTodoDto = {
       name: 'Test Todo',
-      subject: 'Work' as const,
+      subject: 'Work',
       priority: 5,
       date: new Date(),
       geom: {
-        type: 'Point' as const,
+        type: 'Point',
         coordinates: [38.88, 88.88],
       },
     };

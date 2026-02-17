@@ -1,8 +1,9 @@
 import { pgTable, pgEnum, customType } from 'drizzle-orm/pg-core';
 import * as t from 'drizzle-orm/pg-core';
-import wkx from 'wkx';
 
-import { geometryTypes } from '../../src/dto/todosDto.dto';
+import { GeometryInput, TodoGeometrySchema } from '../dto/todosDto.dto';
+
+import wkx from 'wkx';
 
 export const todoSubjectEnum = pgEnum('todo_subject', [
   'Work',
@@ -11,15 +12,6 @@ export const todoSubjectEnum = pgEnum('todo_subject', [
   'Urgent',
   'General',
 ]);
-
-export const todoGeometryTypeEnum = pgEnum('todo_geometry_type', [
-  geometryTypes.point,
-  geometryTypes.Polygon,
-]);
-
-export type GeometryInput =
-  | { type: 'Point'; coordinates: number[] }
-  | { type: 'Polygon'; coordinates: number[][][] };
 
 interface WkxResult {
   type: string;
@@ -43,10 +35,12 @@ const geometry = customType<{ data: GeometryInput }>({
     const buffer = Buffer.from(value, 'hex');
     const geoJsonGeom = wkx.Geometry.parse(buffer).toGeoJSON() as WkxResult;
 
-    return {
+    const returnedObj = {
       type: geoJsonGeom.type,
       coordinates: geoJsonGeom.coordinates,
-    } as GeometryInput;
+    };
+
+    return TodoGeometrySchema.parse(returnedObj);
   },
 });
 

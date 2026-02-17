@@ -1,0 +1,62 @@
+import { useEffect } from "react";
+
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  isSearchGeometryAtom,
+  searchGeoJsonAtom,
+} from "../../../atoms/mapAtoms";
+
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+import { Fill, Stroke, Style } from "ol/style";
+import Draw from "ol/interaction/Draw";
+import GeoJSON from "ol/format/GeoJSON";
+
+import { useMap } from "../MapContext";
+
+const SearchGeoLayer = () => {
+  const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
+  const setSearchGeoJson = useSetAtom(searchGeoJsonAtom);
+  const { map } = useMap();
+
+  useEffect(() => {
+    if (!map || !isSearchGeometry) return;
+
+    const source = new VectorSource();
+    const drawLayer = new VectorLayer({
+      source,
+      style: new Style({
+        stroke: new Stroke({ color: "#ff9800", width: 3, lineDash: [4, 8] }),
+        fill: new Fill({ color: "rgba(255, 152, 0, 0.2)" }),
+      }),
+    });
+
+    map.addLayer(drawLayer);
+
+    const draw = new Draw({
+      source,
+      type: "Polygon",
+    });
+
+    draw.on("drawend", (event) => {
+      const format = new GeoJSON();
+      const geoJsonStr = format.writeGeometry(event.feature.getGeometry()!);
+
+      setSearchGeoJson(geoJsonStr);
+    });
+
+    map.addInteraction(draw);
+
+    return () => {
+      setSearchGeoJson("");
+      map.removeLayer(drawLayer);
+      map.getInteractions().forEach((element) => {
+        if (element instanceof Draw) map.removeInteraction(element);
+      });
+    };
+  }, [isSearchGeometry, map, setSearchGeoJson]);
+
+  return null;
+};
+
+export default SearchGeoLayer;

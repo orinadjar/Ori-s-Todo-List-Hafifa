@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import {
   Dialog,
   DialogTitle,
@@ -24,7 +26,7 @@ import {
   useWatch,
 } from "react-hook-form";
 
-import type { TodoSubject } from "../types/types";
+import { formFieldsSchema, type FormFields, type partialTodo, type TodoSubject } from "../types/types";
 import TodoMapComponent from "./TodoMapComponent";
 
 import { useTodos } from "../hooks/useTodos";
@@ -50,17 +52,7 @@ const TodoDialog = ({
 }: Props) => {
   const { todos, addTodo, updateTodo } = useTodos();
 
-  type FormFields = {
-    name: string;
-    subject: TodoSubject;
-    priority: number;
-    date: Date | null;
-    geometryType: "Point" | "Polygon";
-    pointCoordinates: [number, number] | null;
-    polygonCoordinates: number[][][] | null;
-  };
-
-  const { register, setValue, handleSubmit, reset, control } =
+  const { register, setValue, handleSubmit, reset, control, formState:{ errors } } =
     useForm<FormFields>({
       defaultValues: {
         name: "",
@@ -71,14 +63,13 @@ const TodoDialog = ({
         pointCoordinates: null,
         polygonCoordinates: null,
       },
+      resolver: zodResolver(formFieldsSchema)
     });
 
   const geometryType = useWatch({ control, name: "geometryType" });
   const pointCoordinates = useWatch({ control, name: "pointCoordinates" });
   const polygonCoordinates = useWatch({ control, name: "polygonCoordinates" });
   const name = useWatch({ control, name: "name" });
-  const subject = useWatch({ control, name: "subject" });
-  const priority = useWatch({ control, name: "priority" });
 
   const todoToEdit = editingTodoId
     ? todos.find((t) => t.id === editingTodoId)
@@ -90,39 +81,26 @@ const TodoDialog = ({
   };
 
   const onSubmit: SubmitHandler<FormFields> = (data) => {
-    if (
-      data.name.trim() &&
-      data.date &&
-      (data.pointCoordinates || data.polygonCoordinates)
-    ) {
+    const todoData: partialTodo = {
+      name: data.name,
+      subject: data.subject,
+      priority: data.priority,
+      date: data.date,
+      geom:
+        geometryType === "Point" && pointCoordinates
+          ? { type: "Point" as const, coordinates: pointCoordinates }
+          : {
+            type: "Polygon" as const,
+            coordinates: polygonCoordinates ?? [],
+          },
+    };
 
-      const todoData = {
-        name: data.name,
-        subject: data.subject,
-        priority: data.priority,
-        date: data.date,
-        geom:
-          geometryType === "Point" && pointCoordinates
-            ? { type: "Point" as const, coordinates: pointCoordinates }
-            : {
-                type: "Polygon" as const,
-                coordinates: polygonCoordinates ?? [],
-              },
-      };
-
-      if (editingTodoId) {
-        updateTodo({ todoId: editingTodoId, fields: todoData });
-      } else {
-        addTodo(todoData);
-      }
-      handleCancel();
+    if (editingTodoId) {
+      updateTodo({ todoId: editingTodoId, fields: todoData });
     } else {
-      alert(
-        data.geometryType === "Point"
-          ? "Please select a location!"
-          : "Please draw a polygon!",
-      );
+      addTodo(todoData);
     }
+    handleCancel();
   };
 
   useEffect(() => {
@@ -180,37 +158,52 @@ const TodoDialog = ({
             fullWidth
             variant="outlined"
             {...register("name")}
-            value={name}
+            error={!!errors.name}
+            helperText={errors.name?.message}
             autoFocus
-          ></TextField>
+          />
 
-          <TextField
-            select
-            label="Subject"
-            {...register("subject")}
-            value={subject}
-            fullWidth
-          >
-            {SUBJECTS.map((sub) => (
-              <MenuItem key={sub} value={sub}>
-                {sub}
-              </MenuItem>
-            ))}
-          </TextField>
+          <Controller
+            name="subject"
+            control={control}
+            render={({ field, fieldState: { error } }) => (
+              <TextField
+                select
+                label="Subject"
+                {...field}
+                error={!!error}
+                helperText={error?.message}
+                fullWidth
+              >
+                {SUBJECTS.map((sub) => (
+                  <MenuItem key={sub} value={sub}>
+                    {sub}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
 
-          <TextField
-            select
-            label="Priority"
-            {...register("priority")}
-            value={priority}
-            fullWidth
-          >
-            {[...Array(10)].map((_, i) => (
-              <MenuItem key={i + 1} value={i + 1}>
-                {i + 1}
-              </MenuItem>
-            ))}
-          </TextField>
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field, fieldState: { error } }) => (
+              <TextField
+                select
+                label="Priority"
+                {...field}
+                error={!!error}
+                helperText={error?.message}
+                fullWidth
+              >
+                {[...Array(10)].map((_, i) => (
+                  <MenuItem key={i + 1} value={i + 1}>
+                    {i + 1}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
 
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DemoContainer components={["DatePicker"]}>
@@ -229,17 +222,22 @@ const TodoDialog = ({
           </LocalizationProvider>
         </Stack>
 
-        <TextField
-          select
-          label="Geometry Type"
-          {...register("geometryType")}
-          value={geometryType}
-          fullWidth
-          sx={{ mt: 4 }}
-        >
-          <MenuItem value="Point">Point</MenuItem>
-          <MenuItem value="Polygon">Polygon</MenuItem>
-        </TextField>
+        <Controller
+          name="geometryType"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              select
+              label="Geometry Type"
+              {...field}
+              fullWidth
+              sx={{ mt: 4 }}
+            >
+              <MenuItem value="Point">Point</MenuItem>
+              <MenuItem value="Polygon">Polygon</MenuItem>
+            </TextField>
+          )}
+        />
 
         {locationText && (
           <Box
@@ -255,25 +253,25 @@ const TodoDialog = ({
             todos={
               todoToEdit
                 ? [
-                    {
-                      ...todoToEdit,
-                      geom:
-                        geometryType === "Point" && pointCoordinates
+                  {
+                    ...todoToEdit,
+                    geom:
+                      geometryType === "Point" && pointCoordinates
+                        ? {
+                          type: "Point" as const,
+                          coordinates: pointCoordinates,
+                        }
+                        : geometryType === "Polygon" && polygonCoordinates
                           ? {
-                              type: "Point" as const,
-                              coordinates: pointCoordinates,
-                            }
-                          : geometryType === "Polygon" && polygonCoordinates
-                            ? {
-                                type: "Polygon" as const,
-                                coordinates: polygonCoordinates,
-                              }
-                            : todoToEdit.geom || {
-                                type: "Point" as const,
-                                coordinates: [0, 0],
-                              },
-                    },
-                  ]
+                            type: "Polygon" as const,
+                            coordinates: polygonCoordinates,
+                          }
+                          : todoToEdit.geom || {
+                            type: "Point" as const,
+                            coordinates: [0, 0],
+                          },
+                  },
+                ]
                 : []
             }
             onLocationSelect={(cordinates) =>

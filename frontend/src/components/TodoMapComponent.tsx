@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-import { Feature } from 'ol';
+import { Feature, MapBrowserEvent } from 'ol';
 import { Point, Polygon } from 'ol/geom';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
@@ -13,7 +13,7 @@ import Draw from 'ol/interaction/Draw';
 
 import 'ol/ol.css';
 import { Box } from '@mui/material';
-import type { Todo, TodoGeometryType } from '../types/types';
+import type { Todo, geomTypes } from '../types/types';
 
 import selectorIcon  from '../assets/selector-icon.png';
 import greenSelectorIcon from '../assets/green-selector-icon.png';
@@ -22,7 +22,7 @@ interface Props {
     onLocationSelect?: (coordinates: [number, number] | null) => void;
     onPolygonSelect?: (coordinates: number[][][] | null) => void
     todos?: Todo[];
-    mode?: TodoGeometryType
+    mode?: geomTypes;
 }
 
 const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: Props) => {
@@ -66,7 +66,7 @@ const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: P
         if(!map) return;
 
         if(mode === 'Point'){
-            const clickHandler = (e: any) => {
+            const clickHandler = (e: MapBrowserEvent) => {
                 if (onLocationSelect) {
                     onLocationSelect([e.coordinate[0], e.coordinate[1]]);
                     if (onPolygonSelect) onPolygonSelect(null);

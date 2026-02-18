@@ -23,8 +23,9 @@
   "homepage": "https://github.com/orinadjar/Ori-s-Todo-List-Hafifa#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
-    },
+  },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/mapped-types": "^2.1.0",
     "cache-manager": "^7.2.8",

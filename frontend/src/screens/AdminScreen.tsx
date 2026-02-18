@@ -1,9 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import {
   IconButton,
   Table, TableBody, TableCell,
-  TableHead, TableRow, Box,
+  TableHead, TableRow,
   Typography,
   CircularProgress,
   TableContainer

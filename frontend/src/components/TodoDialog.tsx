@@ -11,9 +11,9 @@ import {
   Box,
 } from "@mui/material";
 
-import dayjs, { Dayjs } from "dayjs";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
@@ -54,7 +54,7 @@ const TodoDialog = ({
     name: string;
     subject: TodoSubject;
     priority: number;
-    date: Dayjs | null;
+    date: Date | null;
     geometryType: "Point" | "Polygon";
     pointCoordinates: [number, number] | null;
     polygonCoordinates: number[][][] | null;
@@ -66,7 +66,7 @@ const TodoDialog = ({
         name: "",
         subject: "General",
         priority: 1,
-        date: dayjs(),
+        date: new Date(),
         geometryType: "Point",
         pointCoordinates: null,
         polygonCoordinates: null,
@@ -95,13 +95,12 @@ const TodoDialog = ({
       data.date &&
       (data.pointCoordinates || data.polygonCoordinates)
     ) {
-      const finalDate = data.date.toDate();
 
       const todoData = {
         name: data.name,
         subject: data.subject,
         priority: data.priority,
-        date: finalDate,
+        date: data.date,
         geom:
           geometryType === "Point" && pointCoordinates
             ? { type: "Point" as const, coordinates: pointCoordinates }
@@ -131,7 +130,7 @@ const TodoDialog = ({
       setValue("name", todoToEdit.name);
       setValue("subject", todoToEdit.subject);
       setValue("priority", todoToEdit.priority);
-      setValue("date", dayjs(todoToEdit.date));
+      setValue("date", new Date(todoToEdit.date));
       setValue("geometryType", todoToEdit.geom.type);
 
       if (todoToEdit.geom.type === "Polygon") {
@@ -213,7 +212,7 @@ const TodoDialog = ({
             ))}
           </TextField>
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DemoContainer components={["DatePicker"]}>
               <Controller
                 name="date"

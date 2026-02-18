@@ -14,11 +14,11 @@ export const useTodos = (searchTerm?: string) => {
     // GET: GetAllTodos
     const { data, isLoading, error, status, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<Todo[]>({
         queryKey: ['todos', searchGeoJson],
-        queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
+        queryFn: async ({ pageParam = 0 }) => {
 
             const url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
             url.searchParams.append('limit', '15');
-            url.searchParams.append('offset', pageParam.toString());
+            url.searchParams.append('offset', String(pageParam));
 
             const options: RequestInit = {
                 method: 'GET',

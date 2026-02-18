@@ -17,12 +17,15 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-import { useForm, type SubmitHandler, Controller } from "react-hook-form";
+import {
+  useForm,
+  type SubmitHandler,
+  Controller,
+  useWatch,
+} from "react-hook-form";
 
 import type { TodoSubject } from "../types/types";
 import TodoMapComponent from "./TodoMapComponent";
-
-import type { Todo } from "../types/types";
 
 import { useTodos } from "../hooks/useTodos";
 
@@ -40,38 +43,42 @@ interface Props {
   handleCloseDialog: () => void;
 }
 
-const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) => {
+const TodoDialog = ({
+  handleCloseDialog,
+  isDialogOpen,
+  editingTodoId,
+}: Props) => {
   const { todos, addTodo, updateTodo } = useTodos();
 
   type FormFields = {
-    name: string,
-    subject: TodoSubject,
-    priority: number,
-    date: Dayjs | null,
-    geometryType: "Point" | "Polygon",
-    pointCoordinates: [number, number] | null,
-    polygonCoordinates: number[][][] | null,
-  }
+    name: string;
+    subject: TodoSubject;
+    priority: number;
+    date: Dayjs | null;
+    geometryType: "Point" | "Polygon";
+    pointCoordinates: [number, number] | null;
+    polygonCoordinates: number[][][] | null;
+  };
 
-  const { register, setValue, handleSubmit, watch, reset, control } = useForm<FormFields>({
-    defaultValues: {
-      name: "",
-      subject: "General",
-      priority: 1,
-      date: dayjs(),
-      geometryType: "Point",
-      pointCoordinates: null,
-      polygonCoordinates: null,
-    }
-  });
+  const { register, setValue, handleSubmit, reset, control } =
+    useForm<FormFields>({
+      defaultValues: {
+        name: "",
+        subject: "General",
+        priority: 1,
+        date: dayjs(),
+        geometryType: "Point",
+        pointCoordinates: null,
+        polygonCoordinates: null,
+      },
+    });
 
-  const geometryType = watch("geometryType");
-  const pointCoordinates = watch("pointCoordinates");
-  const polygonCoordinates = watch("polygonCoordinates");
-  const name = watch("name");
-  const subject = watch("subject");
-  const priority = watch("priority");
-  const date = watch("date");
+  const geometryType = useWatch({ control, name: "geometryType" });
+  const pointCoordinates = useWatch({ control, name: "pointCoordinates" });
+  const polygonCoordinates = useWatch({ control, name: "polygonCoordinates" });
+  const name = useWatch({ control, name: "name" });
+  const subject = useWatch({ control, name: "subject" });
+  const priority = useWatch({ control, name: "priority" });
 
   const todoToEdit = editingTodoId
     ? todos.find((t) => t.id === editingTodoId)
@@ -83,7 +90,11 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
   };
 
   const onSubmit: SubmitHandler<FormFields> = (data) => {
-    if (data.name.trim() && data.date && (data.pointCoordinates || data.polygonCoordinates)) {
+    if (
+      data.name.trim() &&
+      data.date &&
+      (data.pointCoordinates || data.polygonCoordinates)
+    ) {
       const finalDate = data.date.toDate();
 
       const todoData = {
@@ -91,16 +102,13 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
         subject: data.subject,
         priority: data.priority,
         date: finalDate,
-        geometryType: data.geometryType,
-        lat:
-          data.geometryType === "Point" && data.pointCoordinates
-            ? data.pointCoordinates[0]
-            : 0,
-        lng:
-          data.geometryType === "Point" && data.pointCoordinates
-            ? data.pointCoordinates[1]
-            : 0,
-        coordinates: data.geometryType === "Polygon" ? data.polygonCoordinates : null,
+        geom:
+          geometryType === "Point" && pointCoordinates
+            ? { type: "Point" as const, coordinates: pointCoordinates }
+            : {
+                type: "Polygon" as const,
+                coordinates: polygonCoordinates ?? [],
+              },
       };
 
       if (editingTodoId) {
@@ -124,22 +132,19 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
       setValue("subject", todoToEdit.subject);
       setValue("priority", todoToEdit.priority);
       setValue("date", dayjs(todoToEdit.date));
-      setValue("geometryType", todoToEdit.geometryType);
+      setValue("geometryType", todoToEdit.geom.type);
 
-      if (
-        todoToEdit.geometryType === "Polygon" &&
-        todoToEdit.lat === 0 &&
-        todoToEdit.lng === 0 &&
-        todoToEdit.coordinates
-      ) {
-        setValue("polygonCoordinates", todoToEdit.coordinates);
+      if (todoToEdit.geom.type === "Polygon") {
+        setValue(
+          "polygonCoordinates",
+          todoToEdit.geom.coordinates as number[][][],
+        );
         setValue("pointCoordinates", null);
-      } else if (
-        todoToEdit.geometryType === "Point" &&
-        todoToEdit.lat !== undefined &&
-        todoToEdit.lng !== undefined
-      ) {
-        setValue("pointCoordinates", [todoToEdit.lat, todoToEdit.lng]);
+      } else if (todoToEdit.geom.type === "Point") {
+        setValue(
+          "pointCoordinates",
+          todoToEdit.geom.coordinates as [number, number],
+        );
         setValue("polygonCoordinates", null);
       }
     }
@@ -175,7 +180,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
             label="Write your next mission"
             fullWidth
             variant="outlined"
-            {...register('name')}
+            {...register("name")}
             value={name}
             autoFocus
           ></TextField>
@@ -183,7 +188,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
           <TextField
             select
             label="Subject"
-            {...register('subject')}
+            {...register("subject")}
             value={subject}
             fullWidth
           >
@@ -197,7 +202,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
           <TextField
             select
             label="Priority"
-            {...register('priority')}
+            {...register("priority")}
             value={priority}
             fullWidth
           >
@@ -228,7 +233,7 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
         <TextField
           select
           label="Geometry Type"
-          {...register('geometryType')}
+          {...register("geometryType")}
           value={geometryType}
           fullWidth
           sx={{ mt: 4 }}
@@ -249,29 +254,35 @@ const TodoDialog = ({ handleCloseDialog, isDialogOpen, editingTodoId }: Props) =
           <TodoMapComponent
             mode={geometryType}
             todos={
-              [
-                {
-                  ...todoToEdit,
-                  geometryType: geometryType,
-                  lat:
-                    geometryType === "Point" && pointCoordinates
-                      ? pointCoordinates[0]
-                      : 0,
-                  lng:
-                    geometryType === "Point" && pointCoordinates
-                      ? pointCoordinates[1]
-                      : 0,
-                  coordinates:
-                    geometryType === "Polygon" &&
-                      todoToEdit?.lat === 0 &&
-                      todoToEdit.lng === 0
-                      ? todoToEdit?.coordinates
-                      : undefined,
-                },
-              ] as Todo[]
+              todoToEdit
+                ? [
+                    {
+                      ...todoToEdit,
+                      geom:
+                        geometryType === "Point" && pointCoordinates
+                          ? {
+                              type: "Point" as const,
+                              coordinates: pointCoordinates,
+                            }
+                          : geometryType === "Polygon" && polygonCoordinates
+                            ? {
+                                type: "Polygon" as const,
+                                coordinates: polygonCoordinates,
+                              }
+                            : todoToEdit.geom || {
+                                type: "Point" as const,
+                                coordinates: [0, 0],
+                              },
+                    },
+                  ]
+                : []
             }
-            onLocationSelect={(coordinates) => setValue('pointCoordinates', coordinates)}
-            onPolygonSelect={(coordinates) => setValue('polygonCoordinates', coordinates)}
+            onLocationSelect={(cordinates) =>
+              setValue("pointCoordinates", cordinates)
+            }
+            onPolygonSelect={(coordinates) =>
+              setValue("polygonCoordinates", coordinates)
+            }
           />
         </Box>
       </DialogContent>

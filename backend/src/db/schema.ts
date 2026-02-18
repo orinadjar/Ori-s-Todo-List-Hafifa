@@ -1,6 +1,10 @@
 import { pgTable, pgEnum, customType } from 'drizzle-orm/pg-core';
 import * as t from 'drizzle-orm/pg-core';
 
+import { GeometryInput, TodoGeometrySchema } from '../dto/todosDto.dto';
+
+import wkx from 'wkx';
+
 export const todoSubjectEnum = pgEnum('todo_subject', [
   'Work',
   'Personal',
@@ -9,14 +13,10 @@ export const todoSubjectEnum = pgEnum('todo_subject', [
   'General',
 ]);
 
-export const todoGeometryTypeEnum = pgEnum('todo_geometry_type', [
-  'Point',
-  'Polygon',
-]);
-
-export type GeometryInput =
-  | { type: 'Point'; lat: number; lng: number }
-  | { type: 'Polygon'; coordinates: number[][][] };
+interface WkxResult {
+  type: string;
+  coordinates: number[] | number[][][];
+}
 
 const geometry = customType<{ data: GeometryInput }>({
   dataType() {
@@ -24,12 +24,23 @@ const geometry = customType<{ data: GeometryInput }>({
   },
   toDriver(value: GeometryInput): string {
     if (value.type === 'Point') {
-      return `SRID=4326; POINT(${value.lng} ${value.lat})`;
+      return `SRID=4326; POINT(${value.coordinates[0]} ${value.coordinates[1]})`;
     }
     const rings = value.coordinates
       .map((ring) => '(' + ring.map(([x, y]) => `${x} ${y}`).join(', ') + ')')
       .join(', ');
     return `SRID=4326; POLYGON(${rings})`;
+  },
+  fromDriver(value: string) {
+    const buffer = Buffer.from(value, 'hex');
+    const geoJsonGeom = wkx.Geometry.parse(buffer).toGeoJSON() as WkxResult;
+
+    const returnedObj = {
+      type: geoJsonGeom.type,
+      coordinates: geoJsonGeom.coordinates,
+    };
+
+    return TodoGeometrySchema.parse(returnedObj);
   },
 });
 
@@ -40,10 +51,5 @@ export const todos = pgTable('todos', {
   priority: t.integer('priority').notNull(),
   date: t.timestamp('date').notNull(),
   isCompleted: t.boolean('is_completed').default(false).notNull(),
-  geometryType: todoGeometryTypeEnum('geometry_type')
-    .default('Point')
-    .notNull(),
-  lat: t.doublePrecision('lat').notNull(),
-  lng: t.doublePrecision('lng').notNull(),
   geom: geometry('geom'),
 });

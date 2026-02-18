@@ -79,13 +79,13 @@ const AdminScreen = () => {
       id: 'location',
       header: 'Location',
       cell: ({ row }) => {
-        const { lat, lng } = row.original;
-
-        if (lat === null || lng === null) return '-';
+        const { geom } = row.original;
 
         return (
           <Typography variant="body2">
-            {row.original.geometryType === 'Point' ? `${lat.toFixed(2)}, ${lng.toFixed(2)}` : `${row.original.coordinates?.toString().substring(0, 15)}....`}
+            {geom.type === 'Point'
+              ? `${(geom.coordinates)[0].toFixed(2)}, ${(geom.coordinates)[1].toFixed(2)}`
+              : `${(geom.coordinates).toString().substring(0, 15)}....`}
           </Typography>
         );
       },

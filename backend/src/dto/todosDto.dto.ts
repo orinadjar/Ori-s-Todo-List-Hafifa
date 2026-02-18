@@ -8,32 +8,32 @@ export const TodoSubjectSchema = z.enum([
   'General',
 ]);
 
-export const TodoGeometryTypeSchema = z.enum(['Point', 'Polygon']);
+export const geometryTypes = {
+  point: 'Point',
+  Polygon: 'Polygon',
+} as const;
 
-export const coordinatesSchema = z.array(z.array(z.array(z.number())));
+export const TodoCoordinatesTyps = {
+  PolygonCoords: z.array(z.array(z.array(z.number()))),
+  PointCoords: z.tuple([z.number(), z.number()]),
+} as const;
 
-export const FilterGeometrySchema = z
-  .string()
-  .transform((val) => JSON.parse(val))
-  .pipe(
-    z.object({
-      type: z.enum(['Point', 'Polygon']),
-      coordinates: coordinatesSchema,
-    }),
-  );
-
-const TodoGeometrySchema = z.discriminatedUnion('geometryType', [
+export const TodoGeometrySchema = z.discriminatedUnion('type', [
   z.object({
-    geometryType: z.literal('Point'),
-    lat: z.number(),
-    lng: z.number(),
+    type: z.literal(geometryTypes.point),
+    coordinates: TodoCoordinatesTyps.PointCoords,
   }),
 
   z.object({
-    geometryType: z.literal('Polygon'),
-    coordinates: coordinatesSchema.nullable().optional(),
+    type: z.literal(geometryTypes.Polygon),
+    coordinates: TodoCoordinatesTyps.PolygonCoords,
   }),
 ]);
+
+export const FilterGeometrySchema = z.preprocess(
+  (val) => (typeof val === 'string' ? (JSON.parse(val) as object) : val),
+  TodoGeometrySchema,
+);
 
 const TodoFieldsSchema = z
   .object({
@@ -41,10 +41,11 @@ const TodoFieldsSchema = z
     subject: TodoSubjectSchema,
     priority: z.number().int().min(1).max(10),
     date: z.coerce.date(),
+    geom: TodoGeometrySchema,
   })
   .strict();
 
-export const CreateTodoSchema = TodoFieldsSchema.and(TodoGeometrySchema);
+export const CreateTodoSchema = TodoFieldsSchema;
 
 export const TodoSchema = CreateTodoSchema.and(
   z.object({
@@ -53,9 +54,7 @@ export const TodoSchema = CreateTodoSchema.and(
   }),
 );
 
-export const updateTodoSchema = TodoFieldsSchema.partial().and(
-  TodoGeometrySchema.optional(),
-);
+export const updateTodoSchema = TodoFieldsSchema.partial();
 
 export const PaginationQuerySchema = z.coerce.number().int().nonnegative();
 
@@ -63,6 +62,6 @@ export type Todo = z.infer<typeof TodoSchema>;
 export type CreateTodoDto = z.infer<typeof CreateTodoSchema>;
 export type UpdateTodoDto = z.infer<typeof updateTodoSchema>;
 export type TodoSubject = z.infer<typeof TodoSubjectSchema>;
-export type TodoGeometryType = z.infer<typeof TodoGeometryTypeSchema>;
 export type FilterGeometryDto = z.infer<typeof FilterGeometrySchema>;
-export type coordinatesSchemaDto = z.infer<typeof coordinatesSchema>;
+export type TodoGeometryDto = z.infer<typeof TodoGeometrySchema>;
+export type GeometryInput = z.infer<typeof TodoGeometrySchema>;

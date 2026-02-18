@@ -61,10 +61,10 @@ describe('TodoService', () => {
         subject: 'work',
         priority: 5,
         date: new Date(),
-        geometryType: 'Point',
-        lan: 38.88,
-        lng: 88.88,
-        coordinates: null,
+        geom: {
+          type: 'Point',
+          coordinates: [38.88, 88.88],
+        },
       },
     ];
 
@@ -85,15 +85,15 @@ describe('TodoService', () => {
     const limit = 15;
     const offset = 0;
 
-    const todoData = {
+    const todoData: CreateTodoDto = {
       name: 'Test Todo',
-      subject: 'Work' as const,
+      subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Point' as const,
-      lat: 38.88,
-      lng: 88.88,
-      isCompleted: false,
+      geom: {
+        type: 'Point',
+        coordinates: [38.88, 88.88],
+      },
     };
 
     cacheMock.get.mockResolvedValue(null);
@@ -136,18 +136,7 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [77.7, 77.7],
-          [77.7, 77.7],
-          [77.7, 77.7],
-          [77.7, 77.7],
-          [77.7, 77.7],
-        ],
-      ],
+      geom: filterGeometry,
     };
 
     cacheMock.get.mockResolvedValue(null);
@@ -163,8 +152,6 @@ describe('TodoService', () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toEqual(insertedTodo.id);
     expect(result[0].name).toEqual(insertedTodo.name);
-    expect(result[0].lat).not.toEqual('0');
-    expect(result[0].lng).not.toEqual('0');
 
     expect(cacheMock.set).not.toHaveBeenCalled();
   });
@@ -175,39 +162,41 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [8, 9],
-          [9, 9],
-          [33, 8],
-          [89, 32],
-          [98, 11],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [8, 9],
+            [9, 9],
+            [33, 8],
+            [89, 32],
+            [8, 9],
+          ],
         ],
-      ],
+      },
     };
 
-    const fakecache = {
-      id: '1',
-      name: 'mockTodo2',
-      subject: 'Work',
-      priority: 5,
-      date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [8, 9],
-          [9, 9],
-          [33, 8],
-          [89, 32],
-          [98, 11],
-        ],
-      ],
-    };
+    const fakecache = [
+      {
+        id: '1',
+        name: 'mockTodo2',
+        subject: 'Work',
+        priority: 5,
+        date: new Date(),
+        geom: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [8, 9],
+              [9, 9],
+              [33, 8],
+              [89, 32],
+              [8, 9],
+            ],
+          ],
+        },
+      },
+    ];
 
     cacheMock.get.mockResolvedValue(fakecache);
 
@@ -227,23 +216,25 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const insertedTodo = await todosService.addTodo(todoData);
 
     await todosService.deleteTodo(insertedTodo.id);
+
+    cacheMock.get.mockResolvedValue(null);
 
     const result = await todosService.findAllTodos(limit, offset);
 
@@ -257,18 +248,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const updateTodoData: UpdateTodoDto = {
@@ -276,18 +267,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const insertedTodo = await todosService.addTodo(todoData);
@@ -308,18 +299,18 @@ describe('TodoService', () => {
       subject: 'Work',
       priority: 5,
       date: new Date(),
-      geometryType: 'Polygon',
-      lat: 0,
-      lng: 0,
-      coordinates: [
-        [
-          [34.75, 32.05],
-          [34.85, 32.05],
-          [34.85, 32.15],
-          [34.75, 32.15],
-          [34.75, 32.05],
+      geom: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [34.75, 32.05],
+            [34.85, 32.05],
+            [34.85, 32.15],
+            [34.75, 32.15],
+            [34.75, 32.05],
+          ],
         ],
-      ],
+      },
     };
 
     const insertedTodo = await todosService.addTodo(todoData);

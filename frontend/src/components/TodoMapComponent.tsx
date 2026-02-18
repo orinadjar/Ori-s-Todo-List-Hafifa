@@ -69,13 +69,13 @@ const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: P
             const clickHandler = (e: any) => {
                 if (onLocationSelect) {
                     onLocationSelect([e.coordinate[0], e.coordinate[1]]);
-                    if (onPolygonSelect) onPolygonSelect(null); 
+                    if (onPolygonSelect) onPolygonSelect(null);
                 }
             };
 
             map.on('click', clickHandler);
 
-            return () => map.un('click', clickHandler);   
+            return () => map.un('click', clickHandler);
         } else {
             const draw = new Draw({
                 source: VectorSourceRef.current,
@@ -102,37 +102,38 @@ const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: P
 
         VectorSourceRef.current.clear();
 
-        const features = todos.map((todo) => {
-            let feature: Feature;
+        const features = todos
+            .filter(todo => todo.geom)
+            .map((todo) => {
+                let feature: Feature;
 
-            if(todo.geometryType === 'Polygon' && todo.coordinates ) {
-                console.log(todo);
-                feature = new Feature({
-                    geometry: new Polygon(todo.coordinates),
-                    name: todo.name
-                });
+                if (todo.geom.type === 'Polygon') {
+                    feature = new Feature({
+                        geometry: new Polygon(todo.geom.coordinates),
+                        name: todo.name
+                    });
 
-                feature.setStyle(new Style({
-                    stroke: new Stroke({ color: '#3f51b5', width: 3 }),
-                    fill: new Fill({ color: 'rgba(63, 81, 181, 0.2)' }),
-                }));
-            } else {
-                feature = new Feature({
-                    geometry: new Point([todo.lat, todo.lng]),
-                    name: todo.name,
-                 });
+                    feature.setStyle(new Style({
+                        stroke: new Stroke({ color: '#3f51b5', width: 3 }),
+                        fill: new Fill({ color: 'rgba(63, 81, 181, 0.2)' }),
+                    }));
+                } else {
+                    feature = new Feature({
+                        geometry: new Point(todo.geom.coordinates),
+                        name: todo.name,
+                    });
 
-                feature.setStyle(new Style({
-                    image: new Icon({
-                        src: todo.isCompleted ? greenSelectorIcon : selectorIcon,
-                        scale: 0.07
-                    }),
-                    
-                }));
-            }
+                    feature.setStyle(new Style({
+                        image: new Icon({
+                            src: todo.isCompleted ? greenSelectorIcon : selectorIcon,
+                            scale: 0.07
+                        }),
 
-            return feature;
-        });
+                    }));
+                }
+
+                return feature;
+            });
 
         VectorSourceRef.current.addFeatures(features);
 
@@ -140,7 +141,7 @@ const MapComponent = ({ onLocationSelect, onPolygonSelect, todos = [], mode }: P
 
     return (
         <Box ref={mapElement} sx={{ width: '100%', height: '100%',  backgroundColor: '#eee', borderRadius: '8px', overflow: 'hidden' }}>
-            
+
         </Box>
     )
 }

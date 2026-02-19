@@ -18,7 +18,7 @@ const Header = () => {
   const location = useLocation();
 
   return (
-    <AppBar position="sticky" sx={{ bgcolor: 'white', color: 'black', boxShadow: 3, mb: 13 }}>
+    <AppBar position="sticky" sx={{ bgcolor: 'white', color: 'black', boxShadow: 3, mb: 10 }}>
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
           Ori's Todo

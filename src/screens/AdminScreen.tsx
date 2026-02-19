@@ -1,100 +1,118 @@
 import { useMemo } from "react";
 
-import { 
+import {
   IconButton,
-  Table, TableBody, TableCell, 
-  TableHead, TableRow , Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Box,
   Button,
-  Typography
+  Typography,
 } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import Checkbox from '@mui/material/Checkbox';
-import DoneIcon from '@mui/icons-material/Done';
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import Checkbox from "@mui/material/Checkbox";
+import DoneIcon from "@mui/icons-material/Done";
 
-import { 
-  useReactTable, 
-  getCoreRowModel, 
-  flexRender, 
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
   createColumnHelper,
   getSortedRowModel,
-  getPaginationRowModel
+  getPaginationRowModel,
 } from "@tanstack/react-table";
 
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext } from "react-router-dom";
 
-import { useTodos } from "../context/todoContext"
-import type { Todo } from "../types/types";
+import { useTodos } from "../context/todoContext";
+import type { Todo, OutletContext } from "../types/types";
 
 import TodoDialog from "../components/TodoDialog";
 import ControlPanel from "../components/ControlPanel";
 
-interface AdminOutletContext {
-  openEditDialog: (id: string) => void;
-  handleOpenDialog: () => void;
-  isDialogOpen: boolean;
-  editingTodoId: string | null;
-  handleCloseDialog: () => void;
-}
-
 const AdminScreen = () => {
   const { filteredTodos, deleteTodo, toggleTodo } = useTodos();
-  const { openEditDialog, handleOpenDialog, isDialogOpen, editingTodoId, handleCloseDialog } = useOutletContext<AdminOutletContext>();
+  const {
+    openEditDialog,
+    handleOpenDialog,
+    isDialogOpen,
+    editingTodoId,
+    handleCloseDialog,
+  } = useOutletContext<OutletContext>();
 
   const columnHelper = createColumnHelper<Todo>();
 
-  const columns = useMemo(() => [
-    columnHelper.accessor('name', {
-      header: 'Name',
-      enableSorting: false,
-    }),
-    columnHelper.accessor('subject', {
-      header: 'Subject',
-      enableSorting: false,
-    }),
-    columnHelper.accessor('priority', {
-      header: 'Priority',
-    }),
-    columnHelper.accessor('date', { 
-      header: 'Due Date',
-      enableSorting: false,
-      cell: info => {
-        return new Date(info.getValue()).toLocaleDateString();
-      }
-    }),
-    columnHelper.accessor('isCompleted', {
-      header: 'Completed',
-      cell: info => info.getValue() ? 'Yes' : 'No',
-    }),
-    columnHelper.display({
-      id: 'actions',
-      header: 'Actions',
-      enableSorting: false,
-      cell: ({ row }) => {
-        const todo = row.original;
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("name", {
+        header: "Name",
+        enableSorting: false,
+      }),
+      columnHelper.accessor("subject", {
+        header: "Subject",
+        enableSorting: false,
+      }),
+      columnHelper.accessor("priority", {
+        header: "Priority",
+      }),
+      columnHelper.accessor("date", {
+        header: "Due Date",
+        enableSorting: false,
+        cell: (info) => {
+          return new Date(info.getValue()).toLocaleDateString();
+        },
+      }),
+      columnHelper.accessor("isCompleted", {
+        header: "Completed",
+        cell: (info) => (info.getValue() ? "Yes" : "No"),
+      }),
+      columnHelper.accessor("location", {
+        header: "Location",
+        cell: (info) => {
+          const coords = info.getValue();
+          if (!coords) return "-";
 
-        return (
-          <>
-            <IconButton onClick={() => deleteTodo(todo.id)}>
-                <DeleteIcon color='error' />
-            </IconButton>
+          return (
+            <Typography>
+              {`${coords[0].toFixed(2)}, ${coords[1].toFixed(2)}`}
+            </Typography>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const todo = row.original;
 
-            <IconButton onClick={() => openEditDialog(todo.id)}>
-                <EditIcon color='primary' />
-            </IconButton>
+          return (
+            <>
+              <IconButton onClick={() => deleteTodo(todo.id)}>
+                <DeleteIcon color="error" />
+              </IconButton>
 
-            <Checkbox
+              <IconButton onClick={() => openEditDialog(todo.id)}>
+                <EditIcon color="primary" />
+              </IconButton>
+
+              <Checkbox
                 checked={todo.isCompleted}
-                onChange={() => toggleTodo(todo.id)} 
-                color='success'
+                onChange={() => toggleTodo(todo.id)}
+                color="success"
                 icon={<DoneIcon />}
-                checkedIcon={<DoneIcon />} 
-            />
-          </>
-        )
-      }
-    })
-  ], [deleteTodo, toggleTodo, openEditDialog]);
+                checkedIcon={<DoneIcon />}
+              />
+            </>
+          );
+        },
+      }),
+    ],
+    [columnHelper, deleteTodo, openEditDialog, toggleTodo],
+  );
 
   const table = useReactTable({
     data: filteredTodos,
@@ -106,86 +124,95 @@ const AdminScreen = () => {
       pagination: {
         pageSize: 10,
       },
-    }
+    },
   });
 
   return (
     <>
-      <ControlPanel handleOpenDialog={handleOpenDialog}/>
+      <ControlPanel handleOpenDialog={handleOpenDialog} />
 
-      <Box sx={{ display: 'flex',  justifyContent: 'space-between', width: '100%' }}>
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+      >
+        <Button
+          onClick={table.previousPage}
+          disabled={!table.getCanPreviousPage()}
+          variant="contained"
+          color="primary"
+          sx={{ borderRadius: "10px" }}
+        >
+          Previous page
+        </Button>
 
-          <Button onClick={table.previousPage} disabled={!table.getCanPreviousPage()}
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '10px' }}>
-            Previous page
-          </Button>
+        <Typography sx={{ fontWeight: "bold", justifyContent: "end" }}>
+          page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
+        </Typography>
 
-          <Typography sx={{ fontWeight: 'bold',justifyContent: 'end' }}>
-            page { table.getState().pagination.pageIndex + 1 } of { table.getPageCount() }
-          </Typography>
-
-          <Button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '10px' }}>
-            Next page
-          </Button>
-
+        <Button
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          variant="contained"
+          color="primary"
+          sx={{ borderRadius: "10px" }}
+        >
+          Next page
+        </Button>
       </Box>
 
       <Table>
         <TableHead>
-
-          {table.getHeaderGroups().map(headersGroup => (
-
+          {table.getHeaderGroups().map((headersGroup) => (
             <TableRow key={headersGroup.id}>
-              
-              {headersGroup.headers.map(header => (
-                <TableCell key={header.id}
+              {headersGroup.headers.map((header) => (
+                <TableCell
+                  key={header.id}
                   onClick={header.column.getToggleSortingHandler()}
-                  sx={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none' }}>
+                  sx={{
+                    cursor: header.column.getCanSort() ? "pointer" : "default",
+                    userSelect: "none",
+                    "&:hover": header.column.getCanSort()
+                      ? { backgroundColor: "rgba(213, 231, 233, 0.4)" }
+                      : undefined,
+                  }}
+                >
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </TableCell>
               ))}
-
             </TableRow>
           ))}
-      
         </TableHead>
 
         <TableBody>
-
-          {table.getRowModel().rows.map(row => (
-
-            <TableRow key={row.id}
-            sx={{ backgroundColor: row.original.isCompleted ? '#e8f5e9' : '#f8ddddff' }}>
-              
-              {row.getVisibleCells().map(cell => (
+          {table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              sx={{
+                backgroundColor: row.original.isCompleted
+                  ? "#e8f5e9ff"
+                  : "#f8ddddff",
+              }}
+            >
+              {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
-
             </TableRow>
-
           ))}
-
         </TableBody>
-
       </Table>
 
-      <TodoDialog isDialogOpen={isDialogOpen} editingTodoId={editingTodoId} handleCloseDialog={handleCloseDialog}/>
-    
+      <TodoDialog
+        isDialogOpen={isDialogOpen}
+        editingTodoId={editingTodoId}
+        handleCloseDialog={handleCloseDialog}
+      />
     </>
-  )
-}
+  );
+};
 
-export default AdminScreen
+export default AdminScreen;

@@ -1,43 +1,41 @@
-import { useEffect, useRef } from "react";
+import { useEffect} from "react";
 
-import GeoJSON from 'ol/format/GeoJSON';
-import { Vector as VectorLayer } from 'ol/layer';
-import { Vector as VectorSource } from 'ol/source';
+import GeoJSON from "ol/format/GeoJSON";
+import { Vector as VectorLayer } from "ol/layer";
+import { Vector as VectorSource } from "ol/source";
 
 import statesJson from '../../../../states.json';
 import { useMap } from "../MapContext";
 
 const StatesLayer = () => {
+  const { map } = useMap();
 
-    const { map } = useMap();
+  useEffect(() => {
+    if (!map) return;
 
-    const sourceRef = useRef(new VectorSource());
-    const layerRef = useRef(new VectorLayer({
-        source: sourceRef.current,
+    const states = new GeoJSON().readFeatures(statesJson, {
+      dataProjection: "EPSG:4326",
+      featureProjection: "EPSG:3857",
+    });
+
+    const newSource = new VectorSource({
+        features: states
+    });
+
+    const newLayer = new VectorLayer({
+        source: newSource,
         zIndex: 1,
         properties: {name: "States Layer"}
-    }));
+    })
 
-    useEffect(() => {
-        if(!map) return;
+    map.addLayer(newLayer);
 
-        sourceRef.current.clear();
+    return () => {
+      map.removeLayer(newLayer);
+    };
+  }, [map]);
 
-        const states = new GeoJSON().readFeatures(statesJson, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-        });
+  return null;
+};
 
-        sourceRef.current.addFeatures(states);
-
-        map.addLayer(layerRef.current);
-
-        return () => {
-            map.removeLayer(layerRef.current);
-        }
-    }, [map]);
-
-    return null;
-}
-
-export default StatesLayer
+export default StatesLayer;

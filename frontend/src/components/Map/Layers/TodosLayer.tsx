@@ -1,7 +1,8 @@
 import GeoJsonLayer from "./GeoJsonLayer"
 
-import completedIcon from '../../../assets/green-selector-icon.png';
-import unCompletedIcon from '../../../assets/selector-icon.png';
+import completedIcon from "../../../assets/green-selector-icon.png";
+import unCompletedIcon from "../../../assets/selector-icon.png";
+import { useMemo } from "react";
 
 import { useTodos } from "../../../hooks/useTodos";
 import { useAtomValue } from "jotai";
@@ -13,7 +14,8 @@ const TodosLayer = () => {
 
     const { todos } = useTodos(searchTerm);
 
-    const todosGeoJson = {
+    const todosGeoJson = useMemo(() => {
+      return {
         type: 'FeatureCollection',
         features: todos.map(todo => ({
             type: 'Feature',
@@ -34,15 +36,17 @@ const TodosLayer = () => {
                 }
             },
         }))
-    };
+        }
+    }, [todos])
 
-    return (
-        <GeoJsonLayer
-            name="Todos Layer"
-            data={todosGeoJson}
-            zIndex={2}
-            tooltipField="tooltipContent" />
-    )
-}
+  return (
+    <GeoJsonLayer
+      name="Todos Layer"
+      data={todosGeoJson}
+      zIndex={2}
+      tooltipField="tooltipContent"
+    />
+  );
+};
 
-export default TodosLayer
+export default TodosLayer;

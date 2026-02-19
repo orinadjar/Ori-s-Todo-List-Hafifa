@@ -1,4 +1,4 @@
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext } from "react-router-dom";
 
 import ControlPanel from '../components/ControlPanel';
 import TodoList from '../components/TodoList';
@@ -41,9 +41,21 @@ const UserScreen = () => {
             </MapContainer>
           </Box>
 
+        <Box
+          sx={{
+            flex: 1,
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            overflow: "hidden",
+            height: "100%",
+            position: "relative",
+          }}
+        >
+          <MapComponent todos={filteredTodos} />
         </Box>
-      </>
-    )
-}
+      </Box>
+    </>
+  );
+};
 
-export default UserScreen
+export default UserScreen;

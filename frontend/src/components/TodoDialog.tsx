@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   Dialog,
@@ -26,7 +26,12 @@ import {
   useWatch,
 } from "react-hook-form";
 
-import { formFieldsSchema, type FormFields, type partialTodo, type TodoSubject } from "../types/types";
+import {
+  formFieldsSchema,
+  type FormFields,
+  type partialTodo,
+  type TodoSubject,
+} from "../types/types";
 import TodoMapComponent from "./TodoMapComponent";
 
 import { useTodos } from "../hooks/useTodos";
@@ -52,28 +57,34 @@ const TodoDialog = ({
 }: Props) => {
   const { todos, addTodo, updateTodo } = useTodos();
 
-  const { register, setValue, handleSubmit, reset, control, formState:{ errors } } =
-    useForm<FormFields>({
-      defaultValues: {
-        name: "",
-        subject: "General",
-        priority: 1,
-        date: new Date(),
-        geometryType: "Point",
-        pointCoordinates: null,
-        polygonCoordinates: null,
-      },
-      resolver: zodResolver(formFieldsSchema)
-    });
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<FormFields>({
+    defaultValues: {
+      name: "",
+      subject: "General",
+      priority: 1,
+      date: new Date(),
+      geometryType: "Point",
+      pointCoordinates: null,
+      polygonCoordinates: null,
+    },
+    resolver: zodResolver(formFieldsSchema),
+  });
 
   const geometryType = useWatch({ control, name: "geometryType" });
   const pointCoordinates = useWatch({ control, name: "pointCoordinates" });
   const polygonCoordinates = useWatch({ control, name: "polygonCoordinates" });
   const name = useWatch({ control, name: "name" });
 
-  const todoToEdit = editingTodoId
-    ? todos.find((t) => t.id === editingTodoId)
-    : null;
+  const todoToEdit = useMemo(() => {
+    return editingTodoId ? todos.find((t) => t.id === editingTodoId) : null;
+  }, [editingTodoId, todos]);
 
   const handleCancel = () => {
     reset();
@@ -90,9 +101,9 @@ const TodoDialog = ({
         geometryType === "Point" && pointCoordinates
           ? { type: "Point" as const, coordinates: pointCoordinates }
           : {
-            type: "Polygon" as const,
-            coordinates: polygonCoordinates ?? [],
-          },
+              type: "Polygon" as const,
+              coordinates: polygonCoordinates ?? [],
+            },
     };
 
     if (editingTodoId) {
@@ -253,25 +264,25 @@ const TodoDialog = ({
             todos={
               todoToEdit
                 ? [
-                  {
-                    ...todoToEdit,
-                    geom:
-                      geometryType === "Point" && pointCoordinates
-                        ? {
-                          type: "Point" as const,
-                          coordinates: pointCoordinates,
-                        }
-                        : geometryType === "Polygon" && polygonCoordinates
+                    {
+                      ...todoToEdit,
+                      geom:
+                        geometryType === "Point" && pointCoordinates
                           ? {
-                            type: "Polygon" as const,
-                            coordinates: polygonCoordinates,
-                          }
-                          : todoToEdit.geom || {
-                            type: "Point" as const,
-                            coordinates: [0, 0],
-                          },
-                  },
-                ]
+                              type: "Point" as const,
+                              coordinates: pointCoordinates,
+                            }
+                          : geometryType === "Polygon" && polygonCoordinates
+                            ? {
+                                type: "Polygon" as const,
+                                coordinates: polygonCoordinates,
+                              }
+                            : todoToEdit.geom || {
+                                type: "Point" as const,
+                                coordinates: [0, 0],
+                              },
+                    },
+                  ]
                 : []
             }
             onLocationSelect={(cordinates) =>

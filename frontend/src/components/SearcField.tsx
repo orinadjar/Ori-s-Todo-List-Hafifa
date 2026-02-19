@@ -18,8 +18,8 @@ const SearcField = () => {
 
     useEffect(() => {
         setDebuncedSearchAtom(debuncedValue);
-    }, [debuncedValue])
-    
+    }, [debuncedValue, setDebuncedSearchAtom])
+
     return (
         <TextField
             variant="outlined"

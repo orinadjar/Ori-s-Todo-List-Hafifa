@@ -2,21 +2,21 @@ import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-q
 
 import type { Todo } from '../types/types';
 import { useAtomValue } from 'jotai';
-import { isSearchGeometryAtom, searchGeoJsonAtom } from '../atoms/mapAtoms';
+import { isDrawingAtom, searchGeoJsonAtom } from '../atoms/mapAtoms';
 
 const TODO_URL = `${import.meta.env.VITE_API_URL}/todos`;
 
 export const useTodos = (searchTerm?: string) => {
     const queryClient = useQueryClient();
     const searchGeoJson = useAtomValue(searchGeoJsonAtom);
-    const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
+    const isDrawing = useAtomValue(isDrawingAtom);
 
     // GET: GetAllTodos
     const { data, isLoading, error, status, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<Todo[]>({
         queryKey: ['todos', searchGeoJson],
         queryFn: async ({ pageParam = 0 }) => {
 
-            const url = new URL(TODO_URL + (searchGeoJson && isSearchGeometry ? '/filter' : ''));
+            const url = new URL(TODO_URL + (searchGeoJson && isDrawing ? '/filter' : ''));
             url.searchParams.append('limit', '15');
             url.searchParams.append('offset', String(pageParam));
 
@@ -25,7 +25,7 @@ export const useTodos = (searchTerm?: string) => {
                 headers: { 'Content-Type': 'application/json' },
             };
 
-            if (searchGeoJson && isSearchGeometry) {
+            if (searchGeoJson && isDrawing) {
                 options.method = 'POST';
                 options.body = JSON.stringify({
                     filterGeometry: searchGeoJson

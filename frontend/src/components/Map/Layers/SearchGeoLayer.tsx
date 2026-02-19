@@ -15,8 +15,9 @@ import GeoJSON from "ol/format/GeoJSON";
 import { useMap } from "../MapContext";
 
 const SearchGeoLayer = () => {
-  const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
   const setSearchGeoJson = useSetAtom(searchGeoJsonAtom);
+  const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
+  
   const { map } = useMap();
 
   useEffect(() => {
@@ -50,11 +51,9 @@ const SearchGeoLayer = () => {
     return () => {
       setSearchGeoJson("");
       map.removeLayer(drawLayer);
-      map.getInteractions().forEach((element) => {
-        if (element instanceof Draw) map.removeInteraction(element);
-      });
+      map.removeInteraction(draw);
     };
-  }, [isSearchGeometry, map, setSearchGeoJson]);
+  }, [map, setSearchGeoJson, isSearchGeometry]);
 
   return null;
 };

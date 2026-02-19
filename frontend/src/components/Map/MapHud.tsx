@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 import { Button, Checkbox, FormControlLabel, FormGroup, Paper, Typography } from "@mui/material";
 
-import { isSearchGeometryAtom} from "../../atoms/mapAtoms";
+import { isSearchGeometryAtom } from "../../atoms/mapAtoms";
 import { useAtom } from "jotai";
 
 import { Layer } from 'ol/layer';
@@ -13,7 +13,8 @@ import { useMap } from "./MapContext";
 const MapHud = () => {
 
     const { map } = useMap();
-    const [isSearchGeometry, setIsSearchGeometry] = useAtom(isSearchGeometryAtom);
+
+    const [isSearchGeometry, setIsSearchGeometry] = useAtom(isSearchGeometryAtom)
 
     const [layers, setLayers] = useState<Layer[]>([]);
     const [visibleLayers, setVisibleLayers] = useState<{ [key: string]: boolean }>({});
@@ -45,9 +46,9 @@ const MapHud = () => {
 
     const handleToggle = (layer: Layer) => {
         const name = layer.get('name');
-        const nextVisible = !layer.getVisible();
-        layer.setVisible(nextVisible);
-        setVisibleLayers(prev => ({ ...prev, [name]: nextVisible }));
+        const newVisible = !visibleLayers[name];
+        setVisibleLayers(prev => ({ ...prev, [name]: newVisible }));
+        layer.setVisible(newVisible);
     }
 
     return (

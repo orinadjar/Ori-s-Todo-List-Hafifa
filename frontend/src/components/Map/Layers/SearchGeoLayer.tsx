@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useAtomValue, useSetAtom } from "jotai";
 import {
-  isSearchGeometryAtom,
+  isDrawingAtom,
   searchGeoJsonAtom,
 } from "../../../atoms/mapAtoms";
 
@@ -16,12 +16,12 @@ import { useMap } from "../MapContext";
 
 const SearchGeoLayer = () => {
   const setSearchGeoJson = useSetAtom(searchGeoJsonAtom);
-  const isSearchGeometry = useAtomValue(isSearchGeometryAtom);
+  const isDrawing = useAtomValue(isDrawingAtom);
   
   const { map } = useMap();
 
   useEffect(() => {
-    if (!map || !isSearchGeometry) return;
+    if (!map || !isDrawing) return;
 
     const source = new VectorSource();
     const drawLayer = new VectorLayer({
@@ -53,7 +53,7 @@ const SearchGeoLayer = () => {
       map.removeLayer(drawLayer);
       map.removeInteraction(draw);
     };
-  }, [map, setSearchGeoJson, isSearchGeometry]);
+  }, [map, setSearchGeoJson, isDrawing]);
 
   return null;
 };
